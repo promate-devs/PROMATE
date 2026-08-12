@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 public class MemberReviewService {
 
     private final ProjectRepository projectRepository;
-    private final MemberRepository projectMemberRepository;
     private final MemberReviewRepository memberReviewRepository;
     private final MemberRepository memberRepository;
 
@@ -62,23 +61,41 @@ public class MemberReviewService {
         }
 
 
-        List<Member> members = memberRepository.findByProjectId(projectId);
+        // 삭제되지 않은 프로젝트 멤버만 조회
+                List<Member> members =
+                        memberRepository.findAllByProjectIdAndIsDeletedFalse(projectId);
 
-        Set<Long> memberIds = members.stream()
-                .map(member -> member.getUser().getId())
-                .collect(Collectors.toSet());
+        // 본인을 제외한 실제 평가 대상자 ID
+                Set<Long> memberIds = members.stream()
+                        .map(member -> member.getUser().getId())
+                        .filter(memberId -> !memberId.equals(userId))
+                        .collect(Collectors.toSet());
 
-        memberIds.remove(userId); // 본인 제외
+        // 프론트에서 전달된 평가 대상자 ID
+                Set<Long> requestIds = request.getReviews().stream()
+                        .map(MemberReviewRequestDTO.ReviewItem::getRevieweeId)
+                        .collect(Collectors.toSet());
 
-        // 평가 대상 검증
-        Set<Long> requestIds = request.getReviews().stream()
-                .map(MemberReviewRequestDTO.ReviewItem::getRevieweeId)
-                .collect(Collectors.toSet());
+        // 동일한 팀원을 중복 평가한 경우
+                if (request.getReviews().size() != requestIds.size()) {
+                    throw new ReviewException(
+                            ReviewErrorCode.DUPLICATE_REVIEW_TARGET
+                    );
+                }
 
-        if (!memberIds.equals(requestIds)) {
-            throw new ReviewException(ReviewErrorCode.INVALID_REVIEW_TARGET);
-        }
+        // 1. 프로젝트 멤버가 아닌 사용자를 평가하려는 경우
+                if (!memberIds.containsAll(requestIds)) {
+                    throw new ReviewException(
+                            ReviewErrorCode.INVALID_REVIEW_TARGET
+                    );
+                }
 
+        // 2. 모든 팀원을 평가하지 않은 경우
+                if (!requestIds.containsAll(memberIds)) {
+                    throw new ReviewException(
+                            ReviewErrorCode.INCOMPLETE_REVIEW
+                    );
+                }
         List<MemberReview> reviews = request.getReviews().stream()
                 .map(item -> {
 
@@ -169,7 +186,7 @@ public class MemberReviewService {
             throw new ReviewException(ReviewErrorCode.NOT_PROJECT_MEMBER);
         }
 
-        return memberRepository.findByProjectId(projectId).stream()
+        return memberRepository.findAllByProjectIdAndIsDeletedFalse(projectId).stream()
                 .filter(member -> !member.getUser().getId().equals(userId))
                 .map(member -> new MemberReviewResponseDTO.ReviewTarget(
                         member.getUser().getId(),
