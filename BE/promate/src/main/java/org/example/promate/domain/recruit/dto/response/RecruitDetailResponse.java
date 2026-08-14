@@ -13,6 +13,7 @@ public record RecruitDetailResponse(
         String content,
         Category category,
         String status,
+        String recruitImageUrl, // 팀 생성 페이지(모집글 작성 페이지) 대표 이미지, 프로젝트 페이지에도 그대로 사용(수정 가능)
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         AuthorDto author,
