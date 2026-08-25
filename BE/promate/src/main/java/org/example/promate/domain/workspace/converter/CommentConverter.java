@@ -1,5 +1,6 @@
 package org.example.promate.domain.workspace.converter;
 
+import org.example.promate.domain.project.entity.Member;
 import org.example.promate.domain.workspace.dto.req.CommentReqDto;
 import org.example.promate.domain.workspace.dto.res.CommentResDto;
 import org.example.promate.domain.workspace.entity.Comment;
@@ -10,10 +11,11 @@ import java.util.List;
 
 public class CommentConverter {
 
-    public static Comment toEntity(CommentReqDto.AddCommentReqDto dto, Post post){
+    public static Comment toEntity(CommentReqDto.AddCommentReqDto dto, Post post, Member member){
         return Comment.builder()
                 .comment(dto.getComment())
                 .post(post)
+                .member(member)
                 .build();
     }
 
@@ -27,6 +29,7 @@ public class CommentConverter {
     public static CommentResDto.CommentDto toCommentDto(Comment comment){
         return CommentResDto.CommentDto.builder()
                 .commentId(comment.getId())
+                .writer(comment.getMember().getUser().getName())
                 .comment(comment.getComment())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())

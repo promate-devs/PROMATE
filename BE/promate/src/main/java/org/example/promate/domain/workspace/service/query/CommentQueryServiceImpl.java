@@ -34,7 +34,7 @@ public class CommentQueryServiceImpl implements CommentQueryService{
         Post post = postRepository.findByIdAndProjectId(postId, projectId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND_IN_PROJECT));
 
-        List<Comment> allByPostIdOrderByCreatedAtAsc = commentRepository.findAllByPostIdOrderByCreatedAtAsc(post.getId());
+        List<Comment> allByPostIdOrderByCreatedAtAsc = commentRepository.findAllByPostIdWithMemberAndUser(post.getId());
 
         return CommentConverter.toCommentList(allByPostIdOrderByCreatedAtAsc);
     }

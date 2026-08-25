@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.example.promate.domain.project.entity.Member;
 import org.example.promate.domain.workspace.dto.req.CommentReqDto;
 import org.example.promate.domain.workspace.dto.req.PostReqDto;
 import org.example.promate.global.entity.BaseTimeEntity;
@@ -27,6 +28,10 @@ public class Comment extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id")
+    private Member member;
 
     public void update(CommentReqDto.UpdateCommentReqDto dto) {
         this.comment = dto.getComment();

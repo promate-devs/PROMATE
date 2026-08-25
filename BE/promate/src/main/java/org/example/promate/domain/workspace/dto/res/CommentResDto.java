@@ -19,9 +19,10 @@ public class CommentResDto {
 
     @Getter
     @Builder
-    @JsonPropertyOrder({"commentId", "comment", "createdAt", "updatedAt"})
+    @JsonPropertyOrder({"commentId", "writer", "comment", "createdAt", "updatedAt"})
     public static class CommentDto{
         private Long commentId;
+        private String writer;
         private String comment;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
