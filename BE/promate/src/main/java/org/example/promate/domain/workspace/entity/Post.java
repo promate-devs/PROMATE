@@ -49,9 +49,13 @@ public class Post extends BaseTimeEntity {
     @Builder.Default
     private List<PostAttached> attachedList = new ArrayList<>();
 
+    @OneToMany(mappedBy="post", fetch=FetchType.LAZY)
+    @Builder.Default
+    private List<Comment> commentsList = new ArrayList<>();
+
     // 첨부파일 교체: 기존 데이터 전체 삭제 후 새로 등록
     public void updateAttachedList(List<PostAttached> newAttachedList) {
-        this.attachedList.clear(); // 기존 고아 객체 자동 삭제
+        this.attachedList.clear();
         if (newAttachedList != null) {
             this.attachedList.addAll(newAttachedList);
         }

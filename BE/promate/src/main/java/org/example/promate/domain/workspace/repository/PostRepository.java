@@ -36,4 +36,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("projectId") Long projectId,
             @Param("postType") PostType type
     );
+
+    boolean existsByIdAndProjectId(Long postId, Long projectId);
 }
