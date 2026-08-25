@@ -42,6 +42,7 @@ public class PostConverter {
     public static PostResDto.DeletedPostDto toDeletedPostDto(Post post){
         return PostResDto.DeletedPostDto.builder()
                 .postId(post.getId())
+                .deletedAt(LocalDateTime.now())
                 .build();
     }
 

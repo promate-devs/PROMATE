@@ -32,6 +32,7 @@ public class PostResDto {
     @JsonPropertyOrder({"postId"})
     public static class DeletedPostDto{
         Long postId;
+        LocalDateTime deletedAt;
     }
 
     @Builder
