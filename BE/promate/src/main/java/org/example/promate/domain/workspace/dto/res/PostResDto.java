@@ -2,6 +2,7 @@ package org.example.promate.domain.workspace.dto.res;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
+import org.example.promate.domain.workspace.dto.req.PostAttachedReqDto;
 import org.example.promate.domain.workspace.enums.PostType;
 
 import java.time.LocalDateTime;
@@ -28,21 +29,22 @@ public class PostResDto {
 
     @Builder
     @Getter
-    @JsonPropertyOrder({"postId", "deletedAt"})
+    @JsonPropertyOrder({"postId"})
     public static class DeletedPostDto{
         Long postId;
-        LocalDateTime deletedAt;
     }
 
     @Builder
     @Getter
-    @JsonPropertyOrder({"postId", "postType", "title", "content", "writerName", "createdAt", "updatedAt"})
+    @JsonPropertyOrder({"postId", "postType", "writerName", "isPinned", "title", "content", "attached", "createdAt", "updatedAt"})
     public static class PostDto{
         Long postId;
         PostType postType;
+        String writerName;
+        boolean isPinned;
         String title;
         String content;
-        String writerName;
+        List<PostAttachedResDto.AttachedResDto> attached;
         LocalDateTime createdAt;
         LocalDateTime updatedAt;
     }
