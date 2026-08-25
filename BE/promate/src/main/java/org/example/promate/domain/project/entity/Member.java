@@ -6,6 +6,7 @@ import lombok.experimental.SuperBuilder;
 import org.example.promate.domain.project.enums.Position;
 import org.example.promate.domain.user.entity.User;
 
+import org.example.promate.domain.workspace.entity.Comment;
 import org.example.promate.domain.workspace.entity.Post;
 import org.example.promate.global.entity.BaseEntity;
 
@@ -43,6 +44,10 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Post> posts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
 
     public void delete(){
         super.performDelete();
