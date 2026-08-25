@@ -45,15 +45,21 @@ public class PostResDto {
         String title;
         String content;
         List<PostAttachedResDto.AttachedResDto> attached;
+        List<CommentResDto.CommentDto> commentList;
         LocalDateTime createdAt;
         LocalDateTime updatedAt;
     }
 
     @Builder
     @Getter
-    @JsonPropertyOrder
-    public static class PostListDto{
-        List<PostDto> postList;
-
+    @JsonPropertyOrder({"postId", "isPinned", "postType", "title", "writerName", "commentCount", "createdAt"})
+    public static class PostSummaryDto{
+        Long postId;
+        PostType postType;
+        String title;
+        String writerName;
+        LocalDateTime createdAt;
+        boolean isPinned;
+        Long commentCount;
     }
 }

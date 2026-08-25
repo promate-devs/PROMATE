@@ -15,6 +15,7 @@ import org.example.promate.domain.workspace.dto.res.PostResDto;
 import org.example.promate.domain.workspace.entity.Post;
 import org.example.promate.domain.workspace.entity.PostAttached;
 import org.example.promate.domain.workspace.exception.PostException;
+import org.example.promate.domain.workspace.repository.CommentRepository;
 import org.example.promate.domain.workspace.repository.PostAttachedRepository;
 import org.example.promate.domain.workspace.repository.PostRepository;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class PostCommandServiceImpl implements PostCommandService{
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final PostAttachedRepository postAttachedRepository;
+    private final CommentRepository commentRepository;
 
     // 게시글 작성하기
     @Override
@@ -107,8 +109,9 @@ public class PostCommandServiceImpl implements PostCommandService{
             throw new PostException(PostErrorCode.ONLY_WRITER_ACCESS_DELETE);
         }
 
-        postRepository.deleteById(postId);
+        commentRepository.deleteByPostId(postId);
         postAttachedRepository.deleteByPostId(postId);
+        postRepository.deleteById(postId);
 
         return PostConverter.toDeletedPostDto(post);
     }

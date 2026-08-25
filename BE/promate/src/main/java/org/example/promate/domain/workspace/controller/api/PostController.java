@@ -12,6 +12,8 @@ import org.example.promate.global.ApiPayload.ApiResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/projects/{projectId}/posts")
@@ -62,7 +64,7 @@ public class PostController implements PostControllerDocs {
 
     // 게시글 목록 조회
     @GetMapping()
-    public ApiResponse<PostResDto.PostListDto> getAllPostByType(
+    public ApiResponse<List<PostResDto.PostSummaryDto>> getAllPostByType(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long projectId,
             @RequestParam(name = "type", required = false) PostType postType
