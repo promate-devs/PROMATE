@@ -8,13 +8,18 @@ import org.example.promate.domain.project.entity.Project;
 import org.example.promate.domain.project.exception.MemberException;
 import org.example.promate.domain.project.repository.MemberRepository;
 import org.example.promate.domain.workspace.code.PostErrorCode;
+import org.example.promate.domain.workspace.converter.PostAttachedConverter;
 import org.example.promate.domain.workspace.converter.PostConverter;
 import org.example.promate.domain.workspace.dto.req.PostReqDto;
 import org.example.promate.domain.workspace.dto.res.PostResDto;
 import org.example.promate.domain.workspace.entity.Post;
+import org.example.promate.domain.workspace.entity.PostAttached;
 import org.example.promate.domain.workspace.exception.PostException;
+import org.example.promate.domain.workspace.repository.PostAttachedRepository;
 import org.example.promate.domain.workspace.repository.PostRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class PostCommandServiceImpl implements PostCommandService{
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
+    private final PostAttachedRepository postAttachedRepository;
 
     // 게시글 작성하기
     @Override
@@ -35,7 +41,15 @@ public class PostCommandServiceImpl implements PostCommandService{
 
         Post post = PostConverter.toEntity(dto, member, project);
 
-        postRepository.save(post);
+        Post saved = postRepository.save(post);
+
+        // 검증2: 첨부 파일이 존재하는가
+        if (dto.getPostAttached() != null && !dto.getPostAttached().isEmpty()) {
+            List<PostAttached> attachedList = PostAttachedConverter.toEntity(dto.getPostAttached(), saved);
+            postAttachedRepository.saveAll(attachedList);
+
+//            saved.getPostAttacheds().addAll(attachedList);
+        }
 
         return PostConverter.toCreatedPostDto(post);
     }
@@ -62,7 +76,12 @@ public class PostCommandServiceImpl implements PostCommandService{
         }
 
         post.update(dto);
-        postRepository.saveAndFlush(post);
+
+        // 첨부파일(Attached) 수정
+        if (dto.getPostAttached() != null) {
+            List<PostAttached> newAttachedList = PostAttachedConverter.toEntity(dto.getPostAttached(), post);
+            post.updateAttachedList(newAttachedList);
+        }
 
         return PostConverter.toUpdatedPostDto(post);
     }
@@ -88,7 +107,8 @@ public class PostCommandServiceImpl implements PostCommandService{
             throw new PostException(PostErrorCode.ONLY_WRITER_ACCESS_DELETE);
         }
 
-        post.delete();
+        postRepository.deleteById(postId);
+        postAttachedRepository.deleteByPostId(postId);
 
         return PostConverter.toDeletedPostDto(post);
     }

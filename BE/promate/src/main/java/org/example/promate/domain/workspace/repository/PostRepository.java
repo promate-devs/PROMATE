@@ -24,13 +24,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("select p from Post p " +
             "join fetch p.member m " +
             "join fetch m.user u " +
-            "where p.id = :postId and p.isDeleted = false")
+            "where p.id = :postId")
     Optional<Post> findPostWithMemberAndUser(@Param("postId") Long postId);
 
     @Query("select p from Post p " +
             "join fetch p.project " +
             "where p.project.id = :projectId " +
-            "and p.isDeleted = false " +
             "and (:postType is null or p.postType = :postType) " +
             "order by p.createdAt desc") // 최신순 정렬 추가
     List<Post> findAllByProjectIdAndPostType(

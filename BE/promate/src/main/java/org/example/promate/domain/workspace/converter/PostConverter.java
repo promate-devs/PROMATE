@@ -19,6 +19,7 @@ public class PostConverter {
                 .postType(dto.getPostType())
                 .member(member)
                 .project(project)
+                .isPinned(dto.getIsPinned())
                 .build();
     }
 
@@ -40,7 +41,6 @@ public class PostConverter {
     public static PostResDto.DeletedPostDto toDeletedPostDto(Post post){
         return PostResDto.DeletedPostDto.builder()
                 .postId(post.getId())
-                .deletedAt(post.getDeletedAt())
                 .build();
     }
 
@@ -53,6 +53,10 @@ public class PostConverter {
                 .writerName(post.getMember().getUser().getName())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
+                .isPinned(post.isPinned())
+                .attached(post.getAttachedList().stream()
+                        .map(PostAttachedConverter::toAttachedDto)
+                        .toList())
                 .build();
     }
 
