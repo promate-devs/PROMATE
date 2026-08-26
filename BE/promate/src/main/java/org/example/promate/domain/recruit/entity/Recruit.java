@@ -46,6 +46,9 @@ public class Recruit extends BaseEntity {
     @Column(name="total_slots", nullable = false)
     private int totalSlots;
 
+    @Column(name = "recruit_image_url", nullable = true, columnDefinition = "LONGTEXT")
+    private String recruitImageUrl;
+
 
     //mapping
     @OneToMany(mappedBy = "recruit", fetch = FetchType.LAZY)
@@ -65,9 +68,17 @@ public class Recruit extends BaseEntity {
     @Builder.Default
     private List<Apply> applies = new ArrayList<>();
 
-    public void update(String title, String description) {
+    public void update(
+            String title,
+            String description,
+            String recruitImageUrl
+    ) {
         this.title = title;
         this.description = description;
+
+        if (recruitImageUrl != null && !recruitImageUrl.isBlank()) {
+            this.recruitImageUrl = recruitImageUrl;
+        }
     }
 
     public void delete(){

@@ -64,6 +64,7 @@ public class RecruitService {
                 .description(request.description())
                 .category(request.category())
                 .totalSlots(request.totalSlots())
+                .recruitImageUrl(request.recruitImageUrl())
                 .user(writer)
                 .build();
 
@@ -111,6 +112,7 @@ public class RecruitService {
                 recruit.getDescription(),
                 recruit.getCategory(),
                 "RECRUITING", // 임시 상태값
+                recruit.getRecruitImageUrl(),
                 recruit.getCreatedAt(),
                 recruit.getUpdatedAt(),
                 new RecruitDetailResponse.AuthorDto(
@@ -139,7 +141,9 @@ public class RecruitService {
             throw new GeneralException(RecruitErrorCode.NOT_RECRUITMENT_AUTHOR);
         }
 
-        recruit.update(request.title(), request.content());
+        recruit.update(request.title(),
+                request.content(),
+                request.recruitImageUrl());
     }
 
     @Transactional
