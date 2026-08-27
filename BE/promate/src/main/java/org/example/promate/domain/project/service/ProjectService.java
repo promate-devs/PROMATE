@@ -5,10 +5,7 @@ import org.example.promate.domain.apply.entity.Apply;
 import org.example.promate.domain.apply.repository.ApplyRepository;
 import org.example.promate.domain.project.code.MemberErrorCode;
 import org.example.promate.domain.project.code.ProjectErrorCode;
-import org.example.promate.domain.project.dto.MyActivityResponseDTO;
-import org.example.promate.domain.project.dto.MyApplicationResponseDTO;
-import org.example.promate.domain.project.dto.MyProjectResponseDTO;
-import org.example.promate.domain.project.dto.ProjectMemberResponseDTO;
+import org.example.promate.domain.project.dto.*;
 import org.example.promate.domain.project.entity.Member;
 import org.example.promate.domain.project.entity.Project;
 import org.example.promate.domain.project.enums.ProjectStatus;
@@ -16,6 +13,7 @@ import org.example.promate.domain.project.exception.MemberException;
 import org.example.promate.domain.project.exception.ProjectException;
 import org.example.promate.domain.project.repository.MemberRepository;
 import org.example.promate.domain.project.repository.ProjectRepository;
+import org.example.promate.domain.recruit.entity.Recruit;
 import org.example.promate.domain.recruit.repository.BookmarkRepository;
 import org.example.promate.domain.recruit.repository.RecruitRepository;
 import org.example.promate.domain.review.entity.MemberReview;
@@ -181,5 +179,46 @@ public class ProjectService {
                         .name(member.getUser().getName())
                         .build())
                 .toList();
+    }
+
+    // 프로젝트 정보 변경
+    @Transactional
+    public UpdatedProjectResponseDto updateProject(Long userId, Long projectId, UpdateProjectRequestDto dto){
+        // 검증1: 로그인 사용자가 프로젝트 멤버가 맞는가
+        if(!memberRepository.existsByUserIdAndProjectId(userId, projectId)){
+            throw new MemberException(MemberErrorCode.MEMBER_FORBIDDEN_NOT_PROJECT_MEMBER);
+        }
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectException(ProjectErrorCode.ID_NOT_FOUND));
+
+        project.update(dto);
+
+        Recruit recruit = project.getRecruit();
+        recruit.update(dto);
+
+        return UpdatedProjectResponseDto.builder()
+                .projectId(project.getId())
+                .updatedAt(project.getUpdatedAt())
+                .build();
+    }
+
+    // 프로젝트 상태 변경
+    @Transactional
+    public UpdatedProjectResponseDto changeProjectStatus(Long userId, Long projectId, ProjectStatus status){
+        // 검증1: 로그인 사용자가 프로젝트 멤버가 맞는가
+        if(!memberRepository.existsByUserIdAndProjectId(userId, projectId)){
+            throw new MemberException(MemberErrorCode.MEMBER_FORBIDDEN_NOT_PROJECT_MEMBER);
+        }
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectException(ProjectErrorCode.ID_NOT_FOUND));
+
+        project.updateStatus(status);
+
+        return UpdatedProjectResponseDto.builder()
+                .projectId(project.getId())
+                .updatedAt(project.getUpdatedAt())
+                .build();
     }
 }

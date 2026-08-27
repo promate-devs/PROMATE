@@ -1,5 +1,7 @@
 package org.example.promate.domain.recruit.service;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.example.promate.domain.apply.entity.Apply;
 import org.example.promate.domain.apply.repository.ApplyRepository;
@@ -16,6 +18,7 @@ import org.example.promate.domain.recruit.dto.request.RecruitUpdateRequest;
 import org.example.promate.domain.recruit.dto.response.*;
 import org.example.promate.domain.recruit.entity.Bookmark;
 import org.example.promate.domain.recruit.entity.Recruit;
+import org.example.promate.domain.recruit.enums.Category;
 import org.example.promate.domain.recruit.enums.RecruitStatus;
 import org.example.promate.domain.recruit.repository.BookmarkRepository;
 import org.example.promate.domain.recruit.repository.RecruitRepository;
@@ -55,28 +58,31 @@ public class RecruitService {
     private final UserProjectHistoryRepository userProjectHistoryRepository; // 팀장 수동입력 이력
 
     @Transactional
-    public RecruitCreateResponse createRecruitment(
-            RecruitCreateRequest request, Long userId)
-    {
+    public RecruitCreateResponse createRecruitment(RecruitCreateRequest request, Long userId) {
         User writer = userRepository.findById(userId).orElseThrow(() -> new GeneralException(UserErrorCode.USER_NOT_FOUND));
         Recruit recruit = Recruit.builder()
                 .title(request.title())
                 .description(request.description())
                 .category(request.category())
                 .totalSlots(request.totalSlots())
-                .recruitImageUrl(request.recruitImageUrl())
+                .thumbnailUrl(request.thumbnailUrl())
                 .user(writer)
+                .joinedCount(1)
                 .build();
 
         // 임시 Project 객체 생성 (팀장이 팀 결정 OR 팀 빌딩 취소 결정)
         Project project = Project.builder()
-                .title(request.title()) // 일단 모집글 제목을 프로젝트명으로 사용
+                .title(request.title())
                 .description(request.description())
                 .status(ProjectStatus.PREPARING) // 아직 시작 전 상태
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .recruit(recruit)
                 .user(writer)
+                .category(request.category())
+                .thumbnailUrl(request.thumbnailUrl())
+                .totalSlots(request.totalSlots())
+                .joinedCount(1)
+                .recruit(recruit)
                 .build();
 
         //팀장을 프로젝트의 첫 번째 Member로 등록
@@ -94,6 +100,7 @@ public class RecruitService {
         return new RecruitCreateResponse(savedRecruit.getId());
     }
 
+    @Transactional(readOnly = true)
     public RecruitDetailResponse getRecruitmentDetail(Long recruitmentId, Long currentUserId) {
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitmentId)
                 .orElseThrow(() -> new GeneralException(RecruitErrorCode.RECRUITMENT_NOT_FOUND));
@@ -112,7 +119,7 @@ public class RecruitService {
                 recruit.getDescription(),
                 recruit.getCategory(),
                 "RECRUITING", // 임시 상태값
-                recruit.getRecruitImageUrl(),
+                recruit.getThumbnailUrl(),
                 recruit.getCreatedAt(),
                 recruit.getUpdatedAt(),
                 new RecruitDetailResponse.AuthorDto(
@@ -133,7 +140,6 @@ public class RecruitService {
 
     @Transactional
     public void updateRecruitment(Long recruitmentId, RecruitUpdateRequest request, Long userId) {
-
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitmentId)
                 .orElseThrow(() -> new GeneralException(RecruitErrorCode.RECRUITMENT_NOT_FOUND));
 
@@ -141,9 +147,20 @@ public class RecruitService {
             throw new GeneralException(RecruitErrorCode.NOT_RECRUITMENT_AUTHOR);
         }
 
-        recruit.update(request.title(),
-                request.content(),
-                request.recruitImageUrl());
+        // 1. 모집글 정보 수정
+        recruit.update(
+                request.title(),
+                request.description(),
+                request.thumbnailUrl(),
+                request.category(),
+                request.totalSlots()
+        );
+
+        // 2. 연관된 프로젝트 정보 동기화
+        Project project = recruit.getProject();
+        if (project != null) {
+            project.update(request);
+        }
     }
 
     @Transactional

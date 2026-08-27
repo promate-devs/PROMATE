@@ -186,6 +186,10 @@ public class ApplyService {
         // ACCEPTED 상태였다면 추가 처리
         if (apply.getStatus() == Status.ACCEPTED) {
             recruit.decreaseJoinedCount();
+            Project project = recruit.getProject();
+            if (project != null) {
+                project.decreaseJoinedCount();
+            }
 
             // 임시 팀 멤버에서 제거
             Member member = memberRepository.findByProjectIdAndUserId(recruit.getProject().getId(), userId)
@@ -346,6 +350,10 @@ public class ApplyService {
 
         // 임시 프로젝트에 멤버 추가
         Project project = recruit.getProject();
+        if (project != null) {
+            project.increaseJoinedCount();
+        }
+
         Member newMember = Member.builder()
                 .user(apply.getUser())
                 .project(project)
@@ -363,6 +371,10 @@ public class ApplyService {
         // CASE 1: 이미 합격된 지원자를 퇴출하는 경우
         if (currentStatus == Status.ACCEPTED) {
             recruit.decreaseJoinedCount(); // 인원 감소
+            Project project = recruit.getProject();
+            if (project != null) {
+                project.decreaseJoinedCount();
+            }
 
             // 프로젝트 멤버 찾아서 제거 (Soft Delete 수행)
             Member member = memberRepository.findByProjectIdAndUserId(recruit.getProject().getId(), apply.getUser().getId())
