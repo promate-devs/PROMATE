@@ -71,14 +71,28 @@ function ProfileModal({ isOpen, onClose, user, position }) {
   const projects = user?.projects ?? [];
 
   const handleProjectClick = (project) => {
-    const targetId = project.recruitmentId || project.postId;
-    
-    if (targetId && targetId !== "null") {
+    const recruitmentId = project.recruitmentId ?? project.postId;
+    const projectId = project.projectId;
+    const hasValidId = (id) => id != null && id !== "" && id !== "null";
+
+    if (hasValidId(recruitmentId)) {
       onClose();
-      navigate(`/readme/${targetId}`, { state: project });
-    } else {
-      alert("해당 프로젝트는 연동된 모집글 상세 페이지가 없습니다.");
+      navigate(`/readme/${recruitmentId}`, { state: project });
+      return;
     }
+
+    if (hasValidId(projectId)) {
+      onClose();
+      navigate(`/project/${projectId}`, {
+        state: {
+          projectTitle: project.projectTitle || project.title,
+          dueDate: project.endDate,
+        },
+      });
+      return;
+    }
+
+    alert("해당 프로젝트의 상세 페이지가 없습니다.");
   };
 
   const popoverStyle = isMobile
