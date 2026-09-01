@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./ApplyModal.css";
 import { getApplicationForm, postApplication } from "../../api/Recruits/recruitmentApi";
 
@@ -15,6 +15,7 @@ function ApplyModal({
 }) {
   const [fetchedTitle, setFetchedTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -48,8 +49,9 @@ function ApplyModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (submitLockRef.current) return;
 
+    submitLockRef.current = true;
     setIsSubmitting(true);
     try {
       const applicationData = {
@@ -72,12 +74,13 @@ function ApplyModal({
       console.error("지원서 제출 실패:", error);
       alert(error.response?.data?.message || "지원서 제출 중 오류가 발생했습니다.");
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (!submitLockRef.current && e.target === e.currentTarget) {
       onClose?.();
     }
   };
@@ -122,7 +125,12 @@ function ApplyModal({
           </div>
 
           <div className="apply-modal-button-wrap">
-            <button type="button" className="apply-modal-cancel-btn" onClick={onClose}>
+            <button
+              type="button"
+              className="apply-modal-cancel-btn"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               취소
             </button>
             <button 
