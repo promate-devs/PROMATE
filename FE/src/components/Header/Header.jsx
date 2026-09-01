@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getUserInfo } from '../../api/User/userProfileApi.js';
+import { useAuthStore } from '../../stores/useAuthStore.js';
 import logoImg from '../../assets/logoOrange.svg';
 import profileIcon from '../../assets/icons/profileIcon.svg';
 import profileIconHover from '../../assets/icons/profileOrangeIcon.svg';
+import logoutIcon from '../../assets/icons/logout_black.svg';
+import logoutIconHover from '../../assets/icons/logout_orange.svg';
 import ProfileAvatar from '../ProfileAvatar/ProfileAvatar';
 import './Header.css';
 
 function Header({ onMenuClick }) {
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
   const [userData, setUserData] = useState({ userName: "...", profileImageUrl: null });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -65,6 +75,16 @@ function Header({ onMenuClick }) {
       <div className="header-right">
         {isLoggedIn ? (
           <>
+            <button
+              type="button"
+              className="header-logout-btn"
+              onClick={handleLogout}
+              aria-label="로그아웃"
+              data-tooltip="로그아웃"
+            >
+              <img src={logoutIcon} alt="" className="header-logout-icon default-icon" />
+              <img src={logoutIconHover} alt="" className="header-logout-icon hover-icon" />
+            </button>
             <Link to="/profile" className="header-greeting">
               <strong>{userData.userName}</strong> 님 안녕하세요 :)
             </Link>
