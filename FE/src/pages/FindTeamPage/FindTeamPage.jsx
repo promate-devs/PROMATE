@@ -61,8 +61,19 @@ function FindTeamPage() {
 
         if (response.data && response.data.isSuccess) {
           const { content } = response.data.data;
+          const getCreatedTime = (createdAt) => {
+            const createdTime = Date.parse(createdAt);
+            return Number.isNaN(createdTime) ? Number.NEGATIVE_INFINITY : createdTime;
+          };
 
-          const mappedData = content
+          const mappedData = [...content]
+            .sort((a, b) => {
+              const aCreatedTime = getCreatedTime(a.createdAt);
+              const bCreatedTime = getCreatedTime(b.createdAt);
+
+              if (aCreatedTime === bCreatedTime) return 0;
+              return aCreatedTime > bCreatedTime ? -1 : 1;
+            })
             .filter((item) => item.status === "RECRUITING")
             .map((item) => {
               let mappedStatus = null;
