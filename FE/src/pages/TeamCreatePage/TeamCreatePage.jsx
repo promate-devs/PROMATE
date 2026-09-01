@@ -73,6 +73,7 @@ function TeamCreatePage() {
         totalSlots: parseInt(recruitCount, 10),
         startDate: startDate,
         endDate: endDate,
+        recruitImageUrl: null,
       };
 
       const response = await apiClient.post("/recruitments", payload);
