@@ -129,14 +129,27 @@ function ProjectPage() {
       try {
         const response = await getActiveProjects();
         if (response.data && response.data.isSuccess) {
-          const fetchedData = response.data.data.map((item) => ({
-            id: `active-${item.projectId}`,
-            projectId: item.projectId,
-            title: item.title,
-            dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
-            currentStep: item.completedTaskCount,
-            totalStep: item.completedTaskCount + item.incompleteTaskCount,
-          }));
+          const getDeadline = (endDate) => {
+            const deadline = Date.parse(endDate);
+            return Number.isNaN(deadline) ? Number.POSITIVE_INFINITY : deadline;
+          };
+
+          const fetchedData = [...response.data.data]
+            .sort((a, b) => {
+              const aDeadline = getDeadline(a.endDate);
+              const bDeadline = getDeadline(b.endDate);
+
+              if (aDeadline === bDeadline) return 0;
+              return aDeadline < bDeadline ? -1 : 1;
+            })
+            .map((item) => ({
+              id: `active-${item.projectId}`,
+              projectId: item.projectId,
+              title: item.title,
+              dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
+              currentStep: item.completedTaskCount,
+              totalStep: item.completedTaskCount + item.incompleteTaskCount,
+            }));
           setActiveProjects(fetchedData);
         }
       } catch (error) {
