@@ -27,15 +27,6 @@ const getTodayValue = () => {
 function TeamCreatePage() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      alert('로그인이 필요한 서비스입니다.');
-      navigate(-1);
-      return;
-    }
-  }, [navigate]);
-
   const todayValue = getTodayValue();
   const [projectName, setProjectName] = useState("");
   const [selectedDomain, setSelectedDomain] = useState("PROJECT");
