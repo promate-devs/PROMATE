@@ -183,6 +183,17 @@ body {
   color: #FFFFFF;
 }
 
+.domain-tags .common-tag:not(.active):hover {
+  background: #fff3eb;
+  border-color: #fe9a57;
+  color: #f08040;
+}
+
+.domain-tags .common-tag.active:hover {
+  background: #f08040;
+  border-color: #e96e27;
+}
+
 .project-period-field {
   margin-bottom: 20px;
 }
