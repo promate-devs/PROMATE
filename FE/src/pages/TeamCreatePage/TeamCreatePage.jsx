@@ -1,5 +1,6 @@
-﻿﻿import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import logoIcon from "../../assets/logoIcon.svg";
 import FormActions from "./components/FormActions.jsx";
 import ProjectDescriptionField from "./components/ProjectDescriptionField.jsx";
@@ -17,6 +18,17 @@ const domainOptions = [
   { id: "ETC", label: "기타" },
 ];
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("이미지를 불러오지 못했습니다."));
+    reader.readAsDataURL(file);
+  });
+
 const getTodayValue = () => {
   const today = new Date();
   const timezoneOffset = today.getTimezoneOffset() * 60000;
@@ -26,15 +38,7 @@ const getTodayValue = () => {
 
 function TeamCreatePage() {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      alert('로그인이 필요한 서비스입니다.');
-      navigate(-1);
-      return;
-    }
-  }, [navigate]);
+  const imageInputRef = useRef(null);
 
   const todayValue = getTodayValue();
   const [projectName, setProjectName] = useState("");
@@ -43,6 +47,7 @@ function TeamCreatePage() {
   const [startDate, setStartDate] = useState(todayValue);
   const [endDate, setEndDate] = useState(todayValue);
   const [description, setDescription] = useState("");
+  const [recruitImageUrl, setRecruitImageUrl] = useState("");
   const isSubmitEnabled = projectName.trim() !== "" && description.trim() !== "";
 
   const handleCancel = () => {
@@ -52,6 +57,38 @@ function TeamCreatePage() {
     setStartDate(todayValue);
     setEndDate(todayValue);
     setDescription("");
+    setRecruitImageUrl("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const handleResetImage = () => {
+    setRecruitImageUrl("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert("JPG, PNG, WEBP 형식의 이미지만 선택할 수 있습니다.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert("2MB 이하의 이미지만 선택할 수 있습니다.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setRecruitImageUrl(await readFileAsDataUrl(file));
+    } catch (error) {
+      console.error("프로젝트 이미지 미리보기 실패:", error);
+      alert("이미지를 불러오지 못했습니다. 다시 선택해주세요.");
+      event.target.value = "";
+    }
   };
 
   const handleStartDateChange = (value) => {
@@ -73,6 +110,7 @@ function TeamCreatePage() {
         totalSlots: parseInt(recruitCount, 10),
         startDate: startDate,
         endDate: endDate,
+        recruitImageUrl: recruitImageUrl || null,
       };
 
       const response = await apiClient.post("/recruitments", payload);
@@ -90,8 +128,36 @@ function TeamCreatePage() {
     <div className="page-wrapper">
       <h1 className="teammaking-page-title">프로젝트 생성</h1>
       <div className="card">
-        <div className="teammaking-logo-box" aria-hidden="true">
-          <img src={logoIcon} alt="" />
+        <div className="teammaking-image-field">
+          <button
+            type="button"
+            className={`teammaking-logo-box${recruitImageUrl ? " has-image" : ""}`}
+            onClick={() => imageInputRef.current?.click()}
+            aria-label={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
+            title={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
+          >
+            <img
+              src={recruitImageUrl || logoIcon}
+              alt={recruitImageUrl ? "선택한 프로젝트 이미지 미리보기" : ""}
+            />
+            <span className="teammaking-logo-edit" aria-hidden="true">+</span>
+          </button>
+          {recruitImageUrl && (
+            <button
+              type="button"
+              className="teammaking-image-reset"
+              onClick={handleResetImage}
+            >
+              기본 이미지로 변경
+            </button>
+          )}
+          <input
+            ref={imageInputRef}
+            className="teammaking-image-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleImageChange}
+          />
         </div>
         <ProjectNameField
           projectName={projectName}
