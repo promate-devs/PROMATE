@@ -61,6 +61,11 @@ function TeamCreatePage() {
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
+  const handleResetImage = () => {
+    setRecruitImageUrl("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
   const handleImageChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -123,26 +128,37 @@ function TeamCreatePage() {
     <div className="page-wrapper">
       <h1 className="teammaking-page-title">프로젝트 생성</h1>
       <div className="card">
-        <button
-          type="button"
-          className={`teammaking-logo-box${recruitImageUrl ? " has-image" : ""}`}
-          onClick={() => imageInputRef.current?.click()}
-          aria-label={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
-          title={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
-        >
-          <img
-            src={recruitImageUrl || logoIcon}
-            alt={recruitImageUrl ? "선택한 프로젝트 이미지 미리보기" : ""}
+        <div className="teammaking-image-field">
+          <button
+            type="button"
+            className={`teammaking-logo-box${recruitImageUrl ? " has-image" : ""}`}
+            onClick={() => imageInputRef.current?.click()}
+            aria-label={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
+            title={recruitImageUrl ? "프로젝트 이미지 변경" : "프로젝트 이미지 설정"}
+          >
+            <img
+              src={recruitImageUrl || logoIcon}
+              alt={recruitImageUrl ? "선택한 프로젝트 이미지 미리보기" : ""}
+            />
+            <span className="teammaking-logo-edit" aria-hidden="true">+</span>
+          </button>
+          {recruitImageUrl && (
+            <button
+              type="button"
+              className="teammaking-image-reset"
+              onClick={handleResetImage}
+            >
+              기본 이미지로 변경
+            </button>
+          )}
+          <input
+            ref={imageInputRef}
+            className="teammaking-image-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleImageChange}
           />
-          <span className="teammaking-logo-edit" aria-hidden="true">+</span>
-        </button>
-        <input
-          ref={imageInputRef}
-          className="teammaking-image-input"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleImageChange}
-        />
+        </div>
         <ProjectNameField
           projectName={projectName}
           onProjectNameChange={setProjectName}

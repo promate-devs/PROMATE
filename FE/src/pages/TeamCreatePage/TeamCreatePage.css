@@ -42,6 +42,13 @@ body {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
 }
 
+.teammaking-image-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
 .teammaking-logo-box {
   width: 48px;
   height: 48px;
@@ -50,7 +57,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 18px;
+  margin-bottom: 0;
   border-radius: 6px;
   background-color: #f0f0f0;
   position: relative;
@@ -102,6 +109,30 @@ body {
 
 .teammaking-image-input {
   display: none;
+}
+
+.teammaking-image-reset {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #bcbcbc;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #666666;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.teammaking-image-reset:hover {
+  border-color: #fe9a57;
+  background: #fff8f3;
+  color: #f08040;
+}
+
+.teammaking-image-reset:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(243, 132, 30, 0.3);
 }
 
 .form-field {
