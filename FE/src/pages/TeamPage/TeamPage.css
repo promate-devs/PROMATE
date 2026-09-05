@@ -262,6 +262,11 @@
   margin-bottom: 0;
 }
 
+.team-board-header .team-board-write-button {
+  margin-right: 0;
+  padding-right: 0;
+}
+
 .team-board-write-button {
   display: inline-flex;
   align-items: center;
