@@ -95,7 +95,11 @@ export const handlers = [
 
   http.get('*/projects/:projectId/posts', async () => {
     await delay(150);
-    return ok({ postList: mockPosts });
+    const postList = mockPosts.map((post) => ({
+      ...post,
+      commentCount: mockPostComments.filter((comment) => comment.postId === post.postId).length,
+    }));
+    return ok({ postList });
   }),
 
   http.get('*/projects/:projectId/posts/:postId', async ({ params }) => {

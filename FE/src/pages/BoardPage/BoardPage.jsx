@@ -24,7 +24,12 @@ const formatDate = (dateString) => {
 };
 
 const getCommentCount = (post) =>
-  post.commentCount ?? post.commentsCount ?? post.replyCount ?? post.comments?.length ?? 0;
+  post.commentCount ??
+  post.commentsCount ??
+  post.replyCount ??
+  post.commentList?.length ??
+  post.comments?.length ??
+  0;
 
 const POSTS_PER_PAGE = 5;
 

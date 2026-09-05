@@ -28,6 +28,21 @@
   line-height: 1.35;
 }
 
+.board-detail__title-button {
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.board-detail__title-button:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 3px;
+}
+
 .board-detail__menu {
   position: relative;
 }
