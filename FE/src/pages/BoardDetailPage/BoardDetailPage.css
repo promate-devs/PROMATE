@@ -298,6 +298,12 @@
   .board-detail__post-card,
   .board-detail__comment-card { padding: 20px 18px; }
   .board-detail__post-card { gap: 16px; }
+  .board-detail__post-title {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .board-detail__comment-form { gap: 8px; }
   .board-detail__comment-form button { width: 62px; font-size: 16px; }
 }
