@@ -60,15 +60,10 @@
   cursor: pointer;
 }
 
+.board-detail__menu-button:hover,
 .board-detail__menu-button:focus-visible {
   background: rgba(0, 0, 0, 0.05);
   outline: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .board-detail__menu-button:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
 }
 
 .board-detail__menu-popup {
