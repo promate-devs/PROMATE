@@ -42,6 +42,7 @@ function TeamPage() {
   
   const [tasks, setTasks] = useState([]);
   const [projectProgress, setProjectProgress] = useState(0);
+  const [projectTitle, setProjectTitle] = useState(location.state?.projectTitle || '프로젝트');
   const [isTasksLoading, setIsTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
 
@@ -73,7 +74,6 @@ function TeamPage() {
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
 
   const idToFetch = Number(projectId);
-  const projectTitle = location.state?.projectTitle || '프로젝트';
   const projectDueDate = location.state?.dueDate || '마감일 미정';
 
   const completedTasksCount = tasks.filter(task => task.status === 'DONE').length;
@@ -94,6 +94,7 @@ function TeamPage() {
       const data = await getProjectTasks(idToFetch);
       setTasks(data.taskList || []);
       setProjectProgress(data.projectProgress || 0);
+      if (data.projectTitle) setProjectTitle(data.projectTitle);
     } catch (err) {
       setTasksError(err.message);
     } finally {
@@ -306,6 +307,14 @@ const handlePostSubmit = async () => {
     navigate(`/task-board?projectId=${idToFetch}&status=${status}`, { state: { projectTitle, dueDate: projectDueDate } });
   };
 
+  const openBoard = () => {
+    const boardParams = new URLSearchParams({
+      projectId: String(idToFetch),
+      projectTitle,
+    });
+    navigate(`/board?${boardParams.toString()}`, { state: { projectTitle, dueDate: projectDueDate } });
+  };
+
 const closePostModal = () => {
   setIsPostModalOpen(false);
   setPostTitle("");
@@ -461,7 +470,7 @@ const closePostModal = () => {
 
         <section className={`team-card team-board-card ${isBoardExpanded ? 'team-card-expanded' : ''}`}>
           <div className="team-board-header">
-            <PanelTitle icon={<ClipboardList size={18} />} title="게시판" />
+            <PanelTitle icon={<ClipboardList size={18} />} title="게시판" onClick={openBoard} />
             <button
               type="button"
               className="team-board-write-button"
@@ -582,7 +591,27 @@ function MoreButton({ isExpanded, onClick }) {
   );
 }
 
-function PanelTitle({ icon, title }) {
+function PanelTitle({ icon, title, onClick }) {
+  if (onClick) {
+    return (
+      <div
+        className="team-panel-title team-panel-title-button"
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+      >
+        {icon}
+        <h2>{title}</h2>
+      </div>
+    );
+  }
+
   return (
     <div className="team-panel-title">
       {icon}

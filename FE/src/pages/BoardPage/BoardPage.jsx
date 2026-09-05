@@ -1,0 +1,274 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { Ellipsis, MessageCircle, SquarePen } from 'lucide-react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import {
+  createProjectPost,
+  deleteProjectPost,
+  getPostDetail,
+  getProjectPosts,
+  updateProjectPost,
+} from '../../api/TeamPage.js';
+import { getActiveProjects, getCompletedProjects } from '../../api/Project/projectApi.js';
+import PostModal from '../TeamPage/components/PostModal.jsx';
+import PostDetailModal from '../TeamPage/components/PostDetailModal.jsx';
+import '../TeamPage/TeamPage.css';
+import './BoardPage.css';
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return String(dateString).replace(/-/g, '.');
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
+};
+
+const getCommentCount = (post) =>
+  post.commentCount ?? post.commentsCount ?? post.replyCount ?? post.comments?.length ?? 0;
+
+function BoardPage() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const projectId = Number(searchParams.get('projectId'));
+  const [projectTitle, setProjectTitle] = useState(
+    location.state?.projectTitle || searchParams.get('projectTitle') || ''
+  );
+
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingPostType, setEditingPostType] = useState('GENERAL');
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [isPostSubmitting, setIsPostSubmitting] = useState(false);
+
+  const fetchPosts = useCallback(async () => {
+    if (!projectId) {
+      setError('프로젝트 ID가 유효하지 않습니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getProjectPosts(projectId);
+      setPosts(data.postList || []);
+    } catch (fetchError) {
+      setError(fetchError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  useEffect(() => {
+    if (projectTitle || !projectId) return;
+
+    const fetchProjectTitle = async () => {
+      const responses = await Promise.allSettled([
+        getActiveProjects(),
+        getCompletedProjects(),
+      ]);
+
+      const projects = responses.flatMap((result) =>
+        result.status === 'fulfilled' && Array.isArray(result.value.data?.data)
+          ? result.value.data.data
+          : []
+      );
+      const currentProject = projects.find((project) => Number(project.projectId) === projectId);
+
+      if (currentProject?.title) {
+        setProjectTitle(currentProject.title);
+      }
+    };
+
+    fetchProjectTitle();
+  }, [projectId, projectTitle]);
+
+  const handlePostClick = async (postId) => {
+    try {
+      setSelectedPost({ postId });
+      setIsDetailLoading(true);
+      setDetailError(null);
+      setSelectedPost(await getPostDetail(projectId, postId));
+    } catch (fetchError) {
+      setDetailError(fetchError.message);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const openCreateModal = () => {
+    setIsEditMode(false);
+    setEditingPostId(null);
+    setEditingPostType('GENERAL');
+    setPostTitle('');
+    setPostContent('');
+    setIsPostModalOpen(true);
+  };
+
+  const openEditModal = () => {
+    if (!selectedPost?.postId) return;
+
+    setIsEditMode(true);
+    setEditingPostId(selectedPost.postId);
+    setEditingPostType(selectedPost.postType || 'GENERAL');
+    setPostTitle(selectedPost.title || '');
+    setPostContent(selectedPost.content || '');
+    setSelectedPost(null);
+    setIsPostModalOpen(true);
+  };
+
+  const closePostModal = () => {
+    if (isPostSubmitting) return;
+    setIsPostModalOpen(false);
+    setEditingPostId(null);
+    setPostTitle('');
+    setPostContent('');
+  };
+
+  const handlePostSubmit = async () => {
+    if (!postTitle.trim() || !postContent.trim() || isPostSubmitting) return;
+
+    try {
+      setIsPostSubmitting(true);
+      const payload = {
+        title: postTitle.trim(),
+        content: postContent.trim(),
+        postType: editingPostType,
+      };
+
+      if (isEditMode) {
+        await updateProjectPost(projectId, editingPostId, payload);
+      } else {
+        await createProjectPost(projectId, payload);
+      }
+
+      setIsPostModalOpen(false);
+      setEditingPostId(null);
+      setPostTitle('');
+      setPostContent('');
+      await fetchPosts();
+    } catch (submitError) {
+      alert(`게시글 처리에 실패했습니다: ${submitError.message}`);
+    } finally {
+      setIsPostSubmitting(false);
+    }
+  };
+
+  const closePostDetail = () => {
+    setSelectedPost(null);
+    setDetailError(null);
+  };
+
+  const handleDeletePost = async () => {
+    if (!selectedPost?.postId || !window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+
+    try {
+      setIsDetailLoading(true);
+      await deleteProjectPost(projectId, selectedPost.postId);
+      closePostDetail();
+      await fetchPosts();
+    } catch (deleteError) {
+      alert(`게시글 삭제에 실패했습니다: ${deleteError.message}`);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  return (
+    <section className="project-board" aria-labelledby="project-board-title">
+      <div className="project-board__content">
+        <header className="project-board__header">
+          <h1 id="project-board-title" className="project-board__title">
+            {projectTitle ? `${projectTitle} | 게시판` : '게시판'}
+          </h1>
+          <span className="project-board__more" aria-hidden="true">
+            <Ellipsis size={32} aria-hidden="true" />
+          </span>
+        </header>
+
+        <div className="project-board__toolbar">
+          <button type="button" className="project-board__write-button" onClick={openCreateModal}>
+            <SquarePen size={16} aria-hidden="true" />
+            <span>게시글 쓰기</span>
+          </button>
+        </div>
+
+        <div className="project-board__list" aria-label="게시글 목록" aria-busy={isLoading}>
+          {isLoading && <p className="project-board__status">불러오는 중...</p>}
+          {!isLoading && error && <p className="project-board__status project-board__status--error">{error}</p>}
+          {!isLoading && !error && posts.length === 0 && (
+            <p className="project-board__status">등록된 게시글이 없습니다.</p>
+          )}
+
+          {!isLoading && !error && posts.map((post) => (
+            <article
+              key={post.postId}
+              className="project-board__card"
+              role="button"
+              tabIndex={0}
+              onClick={() => handlePostClick(post.postId)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handlePostClick(post.postId);
+                }
+              }}
+            >
+              <div className="project-board__post-info">
+                <h2 className="project-board__post-title">{post.title}</h2>
+                <div className="project-board__meta">
+                  <span>{post.writerName || post.authorName || '작성자'}</span>
+                  <span className="project-board__divider" aria-hidden="true" />
+                  <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
+                </div>
+              </div>
+              <span className="project-board__comments" aria-label={`댓글 ${getCommentCount(post)}개`}>
+                <MessageCircle size={16} aria-hidden="true" />
+                댓글 {getCommentCount(post)}
+              </span>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <PostModal
+        isOpen={isPostModalOpen}
+        isEditMode={isEditMode}
+        title={postTitle}
+        setTitle={setPostTitle}
+        content={postContent}
+        setContent={setPostContent}
+        onClose={closePostModal}
+        onSubmit={handlePostSubmit}
+        isSubmitting={isPostSubmitting}
+      />
+
+      <PostDetailModal
+        isOpen={!!selectedPost}
+        post={selectedPost}
+        isLoading={isDetailLoading}
+        error={detailError}
+        onClose={closePostDetail}
+        onEdit={openEditModal}
+        onDelete={handleDeletePost}
+      />
+    </section>
+  );
+}
+
+export default BoardPage;

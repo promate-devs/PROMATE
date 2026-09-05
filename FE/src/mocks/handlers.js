@@ -1,5 +1,5 @@
 import { delay, http, HttpResponse } from 'msw';
-import { mockMembers, mockPosts, mockSchedules, mockTasks } from './data.js';
+import { mockMembers, mockPosts, mockProject, mockSchedules, mockTasks } from './data.js';
 
 const ok = (data, message = '요청이 성공했습니다.') =>
   HttpResponse.json({ isSuccess: true, message, data });
@@ -27,7 +27,11 @@ export const handlers = [
 
   http.get('*/projects/:projectId/tasks', async () => {
     await delay(150);
-    return ok({ taskList: mockTasks, projectProgress: getProgress() });
+    return ok({
+      projectTitle: mockProject.title,
+      taskList: mockTasks,
+      projectProgress: getProgress(),
+    });
   }),
 
   http.get('*/projects/:projectId/tasks/:taskId', async ({ params }) => {
@@ -149,7 +153,7 @@ export const handlers = [
     const schedule = {
       scheduleId: Math.max(0, ...mockSchedules.map((item) => item.scheduleId)) + 1,
       projectId: Number(params.projectId),
-      projectTitle: 'PROMATE',
+      projectTitle: mockProject.title,
       ...body,
     };
     mockSchedules.push(schedule);
