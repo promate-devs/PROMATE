@@ -246,6 +246,18 @@
   margin-bottom: 18px;
 }
 
+.team-board-header-clickable {
+  margin: -8px -10px 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.team-board-header-clickable:hover {
+  background-color: #f8f9fa;
+}
+
 .team-board-header .team-panel-title {
   margin-bottom: 0;
 }
