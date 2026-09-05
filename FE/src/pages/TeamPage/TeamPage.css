@@ -246,8 +246,25 @@
   margin-bottom: 18px;
 }
 
+.team-board-header-clickable {
+  margin: -8px -10px 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.team-board-header-clickable:hover {
+  background-color: #f8f9fa;
+}
+
 .team-board-header .team-panel-title {
   margin-bottom: 0;
+}
+
+.team-board-header .team-board-write-button {
+  margin-right: 0;
+  padding-right: 0;
 }
 
 .team-board-write-button {
@@ -285,12 +302,40 @@
   margin-bottom: 18px;
 }
 
+.team-panel-title-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.team-panel-title-button:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 4px;
+}
+
 .team-panel-title h2 {
   margin: 0;
   font-family: 'Pretendard', sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: #000000;
+}
+
+.team-empty-state {
+  width: 100%;
+  padding: 40px 0;
+  box-sizing: border-box;
+  color: #888888;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.team-members-list .team-empty-state {
+  grid-column: 1 / -1;
 }
 
 .team-members-list {
