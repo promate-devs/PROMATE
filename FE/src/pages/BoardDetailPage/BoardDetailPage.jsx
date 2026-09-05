@@ -171,7 +171,18 @@ function BoardDetailPage() {
       <div className="board-detail__content">
         <header className="board-detail__page-header">
           <h1 id="board-detail-heading" className="board-detail__page-title">
-            {projectTitle ? `${projectTitle} | 게시판` : '게시판'}
+            <button
+              type="button"
+              className="board-detail__title-button"
+              onClick={() => navigate(`/project/${projectId}`, {
+                state: {
+                  projectTitle,
+                  dueDate: location.state?.dueDate,
+                },
+              })}
+            >
+              {projectTitle ? `${projectTitle} | 게시판` : '게시판'}
+            </button>
           </h1>
 
           {post && (
@@ -233,7 +244,7 @@ function BoardDetailPage() {
                   );
                 })}
                 {comments.length === 0 && (
-                  <p className="board-detail__no-comments">첫 댓글을 남겨보세요.</p>
+                  <p className="board-detail__no-comments">등록된 댓글이 없습니다.</p>
                 )}
               </div>
 
