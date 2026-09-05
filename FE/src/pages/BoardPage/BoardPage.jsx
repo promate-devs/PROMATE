@@ -3,15 +3,11 @@ import { Ellipsis, MessageCircle, SquarePen } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   createProjectPost,
-  deleteProjectPost,
-  getPostDetail,
   getProjectPosts,
-  updateProjectPost,
 } from '../../api/TeamPage.js';
 import { getActiveProjects, getCompletedProjects } from '../../api/Project/projectApi.js';
 import Pagination from '../../components/Pagination/Pagination.jsx';
 import PostModal from '../TeamPage/components/PostModal.jsx';
-import PostDetailModal from '../TeamPage/components/PostDetailModal.jsx';
 import '../TeamPage/TeamPage.css';
 import './BoardPage.css';
 
@@ -28,7 +24,12 @@ const formatDate = (dateString) => {
 };
 
 const getCommentCount = (post) =>
-  post.commentCount ?? post.commentsCount ?? post.replyCount ?? post.comments?.length ?? 0;
+  post.commentCount ??
+  post.commentsCount ??
+  post.replyCount ??
+  post.commentList?.length ??
+  post.comments?.length ??
+  0;
 
 const POSTS_PER_PAGE = 5;
 
@@ -45,13 +46,8 @@ function BoardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editingPostId, setEditingPostId] = useState(null);
-  const [editingPostType, setEditingPostType] = useState('GENERAL');
   const [postTitle, setPostTitle] = useState('');
   const [postContent, setPostContent] = useState('');
   const [isPostSubmitting, setIsPostSubmitting] = useState(false);
@@ -106,44 +102,25 @@ function BoardPage() {
     fetchProjectTitle();
   }, [projectId, projectTitle]);
 
-  const handlePostClick = async (postId) => {
-    try {
-      setSelectedPost({ postId });
-      setIsDetailLoading(true);
-      setDetailError(null);
-      setSelectedPost(await getPostDetail(projectId, postId));
-    } catch (fetchError) {
-      setDetailError(fetchError.message);
-    } finally {
-      setIsDetailLoading(false);
-    }
+  const handlePostClick = (postId) => {
+    const nextSearchParams = new URLSearchParams({ projectId: String(projectId) });
+    if (projectTitle) nextSearchParams.set('projectTitle', projectTitle);
+
+    navigate(`/board/${postId}?${nextSearchParams.toString()}`, {
+      state: { projectTitle },
+    });
   };
 
   const openCreateModal = () => {
     setIsEditMode(false);
-    setEditingPostId(null);
-    setEditingPostType('GENERAL');
     setPostTitle('');
     setPostContent('');
-    setIsPostModalOpen(true);
-  };
-
-  const openEditModal = () => {
-    if (!selectedPost?.postId) return;
-
-    setIsEditMode(true);
-    setEditingPostId(selectedPost.postId);
-    setEditingPostType(selectedPost.postType || 'GENERAL');
-    setPostTitle(selectedPost.title || '');
-    setPostContent(selectedPost.content || '');
-    setSelectedPost(null);
     setIsPostModalOpen(true);
   };
 
   const closePostModal = () => {
     if (isPostSubmitting) return;
     setIsPostModalOpen(false);
-    setEditingPostId(null);
     setPostTitle('');
     setPostContent('');
   };
@@ -156,18 +133,13 @@ function BoardPage() {
       const payload = {
         title: postTitle.trim(),
         content: postContent.trim(),
-        postType: editingPostType,
+        postType: 'GENERAL',
       };
 
-      if (isEditMode) {
-        await updateProjectPost(projectId, editingPostId, payload);
-      } else {
-        await createProjectPost(projectId, payload);
-        setCurrentPage(1);
-      }
+      await createProjectPost(projectId, payload);
+      setCurrentPage(1);
 
       setIsPostModalOpen(false);
-      setEditingPostId(null);
       setPostTitle('');
       setPostContent('');
       await fetchPosts();
@@ -175,26 +147,6 @@ function BoardPage() {
       alert(`게시글 처리에 실패했습니다: ${submitError.message}`);
     } finally {
       setIsPostSubmitting(false);
-    }
-  };
-
-  const closePostDetail = () => {
-    setSelectedPost(null);
-    setDetailError(null);
-  };
-
-  const handleDeletePost = async () => {
-    if (!selectedPost?.postId || !window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
-
-    try {
-      setIsDetailLoading(true);
-      await deleteProjectPost(projectId, selectedPost.postId);
-      closePostDetail();
-      await fetchPosts();
-    } catch (deleteError) {
-      alert(`게시글 삭제에 실패했습니다: ${deleteError.message}`);
-    } finally {
-      setIsDetailLoading(false);
     }
   };
 
@@ -223,7 +175,7 @@ function BoardPage() {
             </button>
           </h1>
           <span className="project-board__more" aria-hidden="true">
-            <Ellipsis size={32} aria-hidden="true" />
+            <Ellipsis size={24} aria-hidden="true" />
           </span>
         </header>
 
@@ -296,15 +248,6 @@ function BoardPage() {
         isSubmitting={isPostSubmitting}
       />
 
-      <PostDetailModal
-        isOpen={!!selectedPost}
-        post={selectedPost}
-        isLoading={isDetailLoading}
-        error={detailError}
-        onClose={closePostDetail}
-        onEdit={openEditModal}
-        onDelete={handleDeletePost}
-      />
     </section>
   );
 }
