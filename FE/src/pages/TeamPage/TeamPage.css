@@ -305,10 +305,6 @@
   border-radius: 4px;
 }
 
-.team-panel-title-button:hover h2 {
-  color: #ff6600;
-}
-
 .team-panel-title-button:focus-visible {
   outline: 2px solid #ff6600;
   outline-offset: 4px;
