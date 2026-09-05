@@ -96,6 +96,22 @@ export const mockPosts = [
     postType: 'GENERAL',
     createdAt: '2026-08-28T18:20:00',
   },
+  {
+    postId: 5,
+    title: '프로젝트 일정 공유',
+    content: '9월 2일부터 9월 25일까지 QA 기간을 포함한 전체 일정을 공유합니다.',
+    writerName: '이찬삼',
+    postType: 'GENERAL',
+    createdAt: '2026-08-27T14:45:00',
+  },
+  {
+    postId: 6,
+    title: '팀 페이지 반응형 UI 구현 완료',
+    content: '모바일과 태블릿에서도 카드 레이아웃이 자연스럽게 보이도록 수정했습니다.',
+    writerName: '쿠정아',
+    postType: 'GENERAL',
+    createdAt: '2026-09-05T11:15:00',
+  }
 ];
 
 export const mockSchedules = [

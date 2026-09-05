@@ -90,6 +90,10 @@
   filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.05));
 }
 
+.project-board__list--paginated {
+  min-height: 390px;
+}
+
 .project-board__card {
   width: 100%;
   min-width: 0;
@@ -194,6 +198,10 @@ p.project-board__status--error {
   font-size: 14px;
   font-weight: 400;
   text-align: center;
+}
+
+.project-board .pagination-container {
+  margin-top: 8px;
 }
 
 @media (max-width: 768px) {

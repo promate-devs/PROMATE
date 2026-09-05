@@ -9,6 +9,7 @@ import {
   updateProjectPost,
 } from '../../api/TeamPage.js';
 import { getActiveProjects, getCompletedProjects } from '../../api/Project/projectApi.js';
+import Pagination from '../../components/Pagination/Pagination.jsx';
 import PostModal from '../TeamPage/components/PostModal.jsx';
 import PostDetailModal from '../TeamPage/components/PostDetailModal.jsx';
 import '../TeamPage/TeamPage.css';
@@ -29,6 +30,8 @@ const formatDate = (dateString) => {
 const getCommentCount = (post) =>
   post.commentCount ?? post.commentsCount ?? post.replyCount ?? post.comments?.length ?? 0;
 
+const POSTS_PER_PAGE = 5;
+
 function BoardPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -39,6 +42,7 @@ function BoardPage() {
   );
 
   const [posts, setPosts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -63,7 +67,10 @@ function BoardPage() {
       setIsLoading(true);
       setError(null);
       const data = await getProjectPosts(projectId);
-      setPosts(data.postList || []);
+      const nextPosts = data.postList || [];
+      const nextTotalPages = Math.max(1, Math.ceil(nextPosts.length / POSTS_PER_PAGE));
+      setPosts(nextPosts);
+      setCurrentPage((page) => Math.min(page, nextTotalPages));
     } catch (fetchError) {
       setError(fetchError.message);
     } finally {
@@ -156,6 +163,7 @@ function BoardPage() {
         await updateProjectPost(projectId, editingPostId, payload);
       } else {
         await createProjectPost(projectId, payload);
+        setCurrentPage(1);
       }
 
       setIsPostModalOpen(false);
@@ -190,6 +198,12 @@ function BoardPage() {
     }
   };
 
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+  const currentPosts = posts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  );
+
   return (
     <section className="project-board" aria-labelledby="project-board-title">
       <div className="project-board__content">
@@ -220,14 +234,18 @@ function BoardPage() {
           </button>
         </div>
 
-        <div className="project-board__list" aria-label="게시글 목록" aria-busy={isLoading}>
+        <div
+          className={`project-board__list ${totalPages > 1 ? 'project-board__list--paginated' : ''}`}
+          aria-label="게시글 목록"
+          aria-busy={isLoading}
+        >
           {isLoading && <p className="project-board__status">불러오는 중...</p>}
           {!isLoading && error && <p className="project-board__status project-board__status--error">{error}</p>}
           {!isLoading && !error && posts.length === 0 && (
             <p className="project-board__empty-state">등록된 게시글이 없습니다.</p>
           )}
 
-          {!isLoading && !error && posts.map((post) => (
+          {!isLoading && !error && currentPosts.map((post) => (
             <article
               key={post.postId}
               className="project-board__card"
@@ -256,6 +274,14 @@ function BoardPage() {
             </article>
           ))}
         </div>
+
+        {!isLoading && !error && posts.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       <PostModal
