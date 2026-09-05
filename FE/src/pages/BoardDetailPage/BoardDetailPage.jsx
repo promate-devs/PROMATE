@@ -194,7 +194,7 @@ function BoardDetailPage() {
                 aria-expanded={isMenuOpen}
                 onClick={() => setIsMenuOpen((open) => !open)}
               >
-                <Ellipsis size={32} />
+                <Ellipsis size={24} />
               </button>
               {isMenuOpen && (
                 <div className="board-detail__menu-popup">

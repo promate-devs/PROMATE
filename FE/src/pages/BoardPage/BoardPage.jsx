@@ -175,7 +175,7 @@ function BoardPage() {
             </button>
           </h1>
           <span className="project-board__more" aria-hidden="true">
-            <Ellipsis size={32} aria-hidden="true" />
+            <Ellipsis size={24} aria-hidden="true" />
           </span>
         </header>
 
