@@ -310,6 +310,21 @@
   color: #000000;
 }
 
+.team-empty-state {
+  width: 100%;
+  padding: 40px 0;
+  box-sizing: border-box;
+  color: #888888;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.team-members-list .team-empty-state {
+  grid-column: 1 / -1;
+}
+
 .team-members-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

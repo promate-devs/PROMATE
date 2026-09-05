@@ -212,7 +212,7 @@ function BoardPage() {
           {isLoading && <p className="project-board__status">불러오는 중...</p>}
           {!isLoading && error && <p className="project-board__status project-board__status--error">{error}</p>}
           {!isLoading && !error && posts.length === 0 && (
-            <p className="project-board__status">등록된 게시글이 없습니다.</p>
+            <p className="project-board__empty-state">등록된 게시글이 없습니다.</p>
           )}
 
           {!isLoading && !error && posts.map((post) => (

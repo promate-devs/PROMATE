@@ -389,7 +389,7 @@ const closePostModal = () => {
             {tasksError && <div className="team-member-status" style={{ color: 'red' }}>{tasksError}</div>}
             
             {!isTasksLoading && !tasksError && tasks.length === 0 && (
-              <div className="team-member-status">등록된 태스크가 없습니다.</div>
+              <div className="team-empty-state">등록된 태스크가 없습니다.</div>
             )}
 
             {!isTasksLoading && !tasksError && visibleTasks.map((task) => (
@@ -469,12 +469,15 @@ const closePostModal = () => {
         </div>
 
         <section className={`team-card team-board-card ${isBoardExpanded ? 'team-card-expanded' : ''}`}>
-          <div className="team-board-header">
+          <div className="team-board-header team-board-header-clickable" onClick={openBoard}>
             <PanelTitle icon={<ClipboardList size={18} />} title="게시판" onClick={openBoard} />
             <button
               type="button"
               className="team-board-write-button"
-              onClick={handleOpenCreateModal}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleOpenCreateModal();
+              }}
             >
               <SquarePen size={12} />
               <span>글쓰기</span>
@@ -485,7 +488,7 @@ const closePostModal = () => {
             {boardError && <div className="team-member-status" style={{ color: 'red' }}>{boardError}</div>}
             
             {!isBoardLoading && !boardError && boardPosts.length === 0 && (
-              <div className="team-member-status">등록된 게시글이 없습니다.</div>
+              <div className="team-empty-state">등록된 게시글이 없습니다.</div>
             )}
 
             {!isBoardLoading && !boardError && visiblePosts.map((post) => (
@@ -494,10 +497,14 @@ const closePostModal = () => {
                 key={post.postId}
                 role="button"
                 tabIndex={0}
-                onClick={() => handlePostClick(post.postId)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handlePostClick(post.postId);
+                }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
+                    event.stopPropagation();
                     handlePostClick(post.postId);
                   }
                 }}
@@ -524,7 +531,7 @@ const closePostModal = () => {
             {membersError && <div className="team-member-status" style={{ color: 'red' }}>{membersError}</div>}
             
             {!isMembersLoading && !membersError && members.length === 0 && (
-              <div className="team-member-status">참여 중인 팀원이 없습니다.</div>
+              <div className="team-empty-state">참여 중인 팀원이 없습니다.</div>
             )}
 
             {!isMembersLoading && !membersError && members.map((member) => (
@@ -584,7 +591,15 @@ const closePostModal = () => {
 
 function MoreButton({ isExpanded, onClick }) {
   return (
-    <button className="team-more-button" type="button" aria-expanded={isExpanded} onClick={onClick}>
+    <button
+      className="team-more-button"
+      type="button"
+      aria-expanded={isExpanded}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+    >
       <span>{isExpanded ? '접기' : '더보기'}</span>
       <img src={moreIcon} alt="" aria-hidden="true" />
     </button>

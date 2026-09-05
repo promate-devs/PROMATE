@@ -64,14 +64,14 @@ export const mockTasks = [
 ];
 
 export const mockPosts = [
-  // {
-  //   postId: 1,
-  //   title: '9월 첫째 주 회의 안내',
-  //   content: '목요일 오후 8시에 온라인으로 진행합니다. 진행 상황을 미리 정리해주세요.',
-  //   writerName: '이찬삼',
-  //   postType: 'GENERAL',
-  //   createdAt: '2026-09-02T10:30:00',
-  // },
+  {
+    postId: 1,
+    title: '9월 첫째 주 회의 안내',
+    content: '목요일 오후 8시에 온라인으로 진행합니다. 진행 상황을 미리 정리해주세요.',
+    writerName: '이찬삼',
+    postType: 'GENERAL',
+    createdAt: '2026-09-02T10:30:00',
+  },
   // {
   //   postId: 2,
   //   title: '디자인 시안 업데이트',

@@ -176,6 +176,16 @@ p.project-board__status--error {
   color: #d83b3b;
 }
 
+.project-board__empty-state {
+  margin: 0;
+  padding: 40px 0;
+  color: #888888;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .project-board {
     padding: 22px 16px 36px;
