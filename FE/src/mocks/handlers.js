@@ -19,6 +19,12 @@ const getProgress = () => {
 const getMember = (managerId) =>
   mockMembers.find((member) => member.userId === Number(managerId));
 
+const mockPostComments = [
+  { commentId: 1, postId: 1, writerName: '김철수', content: '고생하셨습니다! 디자인 파트 오늘까지 마무리할게요.', createdAt: '2026-02-09T13:00:00' },
+  { commentId: 2, postId: 1, writerName: '김영희', content: '디자인 시안 공유드렸는데 확인 부탁드려요.', createdAt: '2026-02-09T14:00:00' },
+  { commentId: 3, postId: 1, writerName: '홍길동', content: '다음 회의는 목요일 그대로 진행할까요?', createdAt: '2026-02-10T09:00:00' },
+];
+
 export const handlers = [
   http.get('*/projects/:projectId/members', async () => {
     await delay(150);
@@ -95,7 +101,25 @@ export const handlers = [
   http.get('*/projects/:projectId/posts/:postId', async ({ params }) => {
     await delay(100);
     const post = mockPosts.find((item) => item.postId === Number(params.postId));
+    if (post) {
+      post.commentList = mockPostComments.filter(
+        (comment) => comment.postId === Number(params.postId),
+      );
+    }
     return post ? ok(post) : notFound('게시글을 찾을 수 없습니다.');
+  }),
+
+  http.post('*/projects/:projectId/posts/:postId/comments', async ({ params, request }) => {
+    const body = await request.json();
+    const newComment = {
+      commentId: Math.max(0, ...mockPostComments.map((item) => item.commentId)) + 1,
+      postId: Number(params.postId),
+      writerName: '김프로',
+      content: body.content,
+      createdAt: new Date().toISOString(),
+    };
+    mockPostComments.push(newComment);
+    return ok(newComment, '댓글을 등록했습니다.');
   }),
 
   http.post('*/projects/:projectId/posts', async ({ request }) => {

@@ -59,3 +59,11 @@ export const deleteProjectTask = async (projectId, taskId) => {
   const response = await apiClient.delete(`/projects/${projectId}/tasks/${taskId}`);
   return response.data.data;
 };
+
+export const createPostComment = async (projectId, postId, content) => {
+  const response = await apiClient.post(
+    `/projects/${projectId}/posts/${postId}/comments`,
+    { content }
+  );
+  return response.data.data;
+};

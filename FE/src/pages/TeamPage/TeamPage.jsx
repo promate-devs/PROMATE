@@ -7,16 +7,12 @@ import SummaryCard from '../../components/SummaryCard/SummaryCard';
 import moreIcon from '../../assets/moreIcon.svg';
 import NewTaskModal from '../../components/NewTaskModal/NewTaskModal.jsx';
 import PostModal from './components/PostModal.jsx';
-import PostDetailModal from './components/PostDetailModal.jsx';
 import TaskDetailModal from './components/TaskDetailModal.jsx';
 import { 
   getProjectMembers, 
   getProjectTasks, 
   getProjectPosts, 
-  getPostDetail, 
   createProjectPost,
-  updateProjectPost,
-  deleteProjectPost,
   getTaskDetail,
   createProjectTask,
   updateProjectTask,
@@ -58,10 +54,6 @@ function TeamPage() {
   const [isBoardLoading, setIsBoardLoading] = useState(true);
   const [boardError, setBoardError] = useState(null);
 
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState(null);
-
   const [visibleTaskCount, setVisibleTaskCount] = useState(INITIAL_VISIBLE_COUNT);
   const [visiblePostCount, setVisiblePostCount] = useState(INITIAL_VISIBLE_COUNT);
   
@@ -69,7 +61,6 @@ function TeamPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [postTitle, setPostTitle] = useState('');
   const [postContent, setPostContent] = useState('');
-  const [editingPostId, setEditingPostId] = useState(null);
   const [isPostSubmitting, setIsPostSubmitting] = useState(false);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
 
@@ -212,18 +203,14 @@ function TeamPage() {
     }
   };
 
-  const handlePostClick = async (postId) => {
-    try {
-      setIsDetailLoading(true);
-      setDetailError(null);
-      setSelectedPost({ postId });
-      const data = await getPostDetail(idToFetch, postId);
-      setSelectedPost(data);
-    } catch (err) {
-      setDetailError(err.message);
-    } finally {
-      setIsDetailLoading(false);
-    }
+  const handlePostClick = (postId) => {
+    const boardParams = new URLSearchParams({
+      projectId: String(idToFetch),
+      projectTitle,
+    });
+    navigate(`/board/${postId}?${boardParams.toString()}`, {
+      state: { projectTitle, dueDate: projectDueDate },
+    });
   };
 
   const handleOpenCreateModal = () => {
@@ -233,18 +220,6 @@ function TeamPage() {
     setIsPostModalOpen(true);
   };
 
-const handleOpenEditModal = () => {
-  if (!selectedPost) return;
-
-  setIsEditMode(true);
-  setEditingPostId(selectedPost.postId);
-  setPostTitle(selectedPost.title);
-  setPostContent(selectedPost.content);
-  //수정 모달 열리면 기존 조회 모델 닫게 수정 완료(2026/06/02)
-  setSelectedPost(null);
-  setIsPostModalOpen(true);
-};
-
 const handlePostSubmit = async () => {
   if (!postTitle.trim() || !postContent.trim() || isPostSubmitting) {
     return;
@@ -253,29 +228,13 @@ const handlePostSubmit = async () => {
   try {
     setIsPostSubmitting(true);
 
-    if (isEditMode) {
-      await updateProjectPost(idToFetch, editingPostId, {
-        title: postTitle.trim(),
-        content: postContent.trim(),
-        postType: selectedPost?.postType || "GENERAL",
-      });
-
-      setSelectedPost((prev) => ({
-        ...prev,
-        postId: editingPostId,
-        title: postTitle.trim(),
-        content: postContent.trim(),
-      }));
-    } else {
-      await createProjectPost(idToFetch, {
-        title: postTitle.trim(),
-        content: postContent.trim(),
-        postType: "GENERAL",
-      });
-    }
+    await createProjectPost(idToFetch, {
+      title: postTitle.trim(),
+      content: postContent.trim(),
+      postType: "GENERAL",
+    });
 
     closePostModal();
-    if (!isEditMode) closePostDetailModal();
     await fetchPosts();
   } catch (err) {
     console.log("수정 에러:", err);
@@ -286,22 +245,6 @@ const handlePostSubmit = async () => {
     setIsPostSubmitting(false);
   }
 };
-
-  const handleDeletePost = async () => {
-    if (!selectedPost) return;
-    if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
-
-    try {
-      setIsDetailLoading(true);
-      await deleteProjectPost(idToFetch, selectedPost.postId);
-      closePostDetailModal();
-      await fetchPosts();
-    } catch (err) {
-      alert(`게시글 삭제에 실패했습니다: ${err.message}`);
-    } finally {
-      setIsDetailLoading(false);
-    }
-  };
 
   const openTaskBoard = (status) => {
     navigate(`/task-board?projectId=${idToFetch}&status=${status}`, { state: { projectTitle, dueDate: projectDueDate } });
@@ -319,13 +262,7 @@ const closePostModal = () => {
   setIsPostModalOpen(false);
   setPostTitle("");
   setPostContent("");
-  setEditingPostId(null);
 };
-
-  const closePostDetailModal = () => {
-    setSelectedPost(null);
-    setDetailError(null);
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -554,16 +491,6 @@ const closePostModal = () => {
         onClose={closePostModal}
         onSubmit={handlePostSubmit}
         isSubmitting={isPostSubmitting}
-      />
-
-      <PostDetailModal
-        isOpen={!!selectedPost}
-        post={selectedPost}
-        isLoading={isDetailLoading}
-        error={detailError}
-        onClose={closePostDetailModal}
-        onEdit={handleOpenEditModal}
-        onDelete={handleDeletePost}
       />
 
       <TaskDetailModal
