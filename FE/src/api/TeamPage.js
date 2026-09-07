@@ -20,6 +20,13 @@ export const getPostDetail = async (projectId, postId) => {
   return response.data.data;
 };
 
+export const getPostComments = async (projectId, postId) => {
+  const response = await apiClient.get(
+    `/projects/${projectId}/posts/${postId}/comments`
+  );
+  return response.data.data;
+};
+
 export const createProjectPost = async (projectId, postData) => {
   const response = await apiClient.post(`/projects/${projectId}/posts`, postData);
   return response.data.data;

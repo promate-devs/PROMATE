@@ -113,6 +113,25 @@ export const handlers = [
     return post ? ok(post) : notFound('게시글을 찾을 수 없습니다.');
   }),
 
+  http.get('*/projects/:projectId/posts/:postId/comments', async ({ params }) => {
+    await delay(100);
+    const commentList = mockPostComments
+      .filter((comment) => comment.postId === Number(params.postId))
+      .map((comment) => ({
+        commentId: comment.commentId,
+        comment: comment.content,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt ?? comment.createdAt,
+      }));
+
+    return HttpResponse.json({
+      isSuccess: true,
+      code: 'COMMENT_S002',
+      message: '댓글 조회에 성공했습니다.',
+      data: { count: commentList.length, commentList },
+    });
+  }),
+
   http.post('*/projects/:projectId/posts/:postId/comments', async ({ params, request }) => {
     const body = await request.json();
     const newComment = {
