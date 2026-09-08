@@ -20,6 +20,13 @@ export const getPostDetail = async (projectId, postId) => {
   return response.data.data;
 };
 
+export const getPostComments = async (projectId, postId) => {
+  const response = await apiClient.get(
+    `/projects/${projectId}/posts/${postId}/comments`
+  );
+  return response.data.data;
+};
+
 export const createProjectPost = async (projectId, postData) => {
   const response = await apiClient.post(`/projects/${projectId}/posts`, postData);
   return response.data.data;
@@ -60,10 +67,10 @@ export const deleteProjectTask = async (projectId, taskId) => {
   return response.data.data;
 };
 
-export const createPostComment = async (projectId, postId, content) => {
+export const createPostComment = async (projectId, postId, comment) => {
   const response = await apiClient.post(
     `/projects/${projectId}/posts/${postId}/comments`,
-    { content }
+    { comment }
   );
   return response.data.data;
 };

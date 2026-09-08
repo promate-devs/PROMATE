@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import {
   createPostComment,
   deleteProjectPost,
+  getPostComments,
   getPostDetail,
   updateProjectPost,
 } from '../../api/TeamPage.js';
@@ -20,11 +21,6 @@ const formatDate = (value) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}.${month}.${day}`;
-};
-
-const getComments = (post) => {
-  const comments = post?.commentList ?? post?.comments ?? post?.replies ?? [];
-  return Array.isArray(comments) ? comments : [];
 };
 
 function CommentAvatar({ comment }) {
@@ -55,6 +51,10 @@ function BoardDetailPage() {
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [comments, setComments] = useState([]);
+  const [commentCount, setCommentCount] = useState(0);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState('');
   const [comment, setComment] = useState('');
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -89,9 +89,39 @@ function BoardDetailPage() {
     }
   }, [postId, projectId]);
 
+  const fetchComments = useCallback(async () => {
+    if (!projectId || !postId) {
+      setComments([]);
+      setCommentCount(0);
+      setCommentsError('댓글 정보를 불러올 수 없습니다.');
+      setIsCommentsLoading(false);
+      return;
+    }
+
+    try {
+      setIsCommentsLoading(true);
+      setCommentsError('');
+      const data = await getPostComments(projectId, postId);
+      const commentList = Array.isArray(data?.commentList) ? data.commentList : [];
+
+      setComments(commentList);
+      setCommentCount(Number.isFinite(data?.count) ? data.count : commentList.length);
+    } catch (fetchError) {
+      setComments([]);
+      setCommentCount(0);
+      setCommentsError(fetchError.message || '댓글을 불러오지 못했습니다.');
+    } finally {
+      setIsCommentsLoading(false);
+    }
+  }, [postId, projectId]);
+
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   useEffect(() => {
     const closeMenu = (event) => {
@@ -101,8 +131,6 @@ function BoardDetailPage() {
     return () => document.removeEventListener('mousedown', closeMenu);
   }, []);
 
-  const comments = getComments(post);
-
   const handleCommentSubmit = async (event) => {
     event.preventDefault();
     const content = comment.trim();
@@ -110,17 +138,9 @@ function BoardDetailPage() {
 
     try {
       setIsCommentSubmitting(true);
-      const createdComment = await createPostComment(projectId, postId, content);
+      await createPostComment(projectId, postId, content);
       setComment('');
-
-      if (createdComment) {
-        setPost((current) => ({
-          ...current,
-          commentList: [...getComments(current), createdComment],
-        }));
-      } else {
-        await fetchPost();
-      }
+      await fetchComments();
     } catch (submitError) {
       window.alert(`댓글 등록에 실패했습니다: ${submitError.message}`);
     } finally {
@@ -223,11 +243,17 @@ function BoardDetailPage() {
 
             <section className="board-detail__comment-card" aria-labelledby="comment-heading">
               <h2 id="comment-heading" className="board-detail__comment-title">
-                댓글 {comments.length}개
+                댓글 {commentCount}개
               </h2>
 
               <div className="board-detail__comment-list">
-                {comments.map((item, index) => {
+                {isCommentsLoading && (
+                  <p className="board-detail__no-comments">댓글을 불러오는 중...</p>
+                )}
+                {!isCommentsLoading && commentsError && (
+                  <p className="board-detail__no-comments">{commentsError}</p>
+                )}
+                {!isCommentsLoading && !commentsError && comments.map((item, index) => {
                   const writer = item.writerName ?? item.authorName ?? item.nickname ?? '작성자';
                   const createdAt = item.createdAt ?? item.updatedAt;
                   return (
@@ -238,12 +264,12 @@ function BoardDetailPage() {
                           <strong>{writer}</strong>
                           <time dateTime={createdAt}>{formatDate(createdAt)}</time>
                         </div>
-                        <p>{item.content ?? item.commentContent ?? item.text}</p>
+                        <p>{item.comment ?? item.content ?? item.commentContent ?? item.text}</p>
                       </div>
                     </article>
                   );
                 })}
-                {comments.length === 0 && (
+                {!isCommentsLoading && !commentsError && comments.length === 0 && (
                   <p className="board-detail__no-comments">등록된 댓글이 없습니다.</p>
                 )}
               </div>
