@@ -43,4 +43,13 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
             "join fetch m.project " +
             "where m.user.id = :userId")
     List<Member> findByUserIdWithProject(@Param("userId") Long userId);
+
+    @Query("SELECT m FROM Member m " +
+            "JOIN FETCH m.project p " +
+            "LEFT JOIN FETCH p.recruit " +
+            "WHERE m.id = :memberId AND p.id = :projectId AND m.isDeleted = false")
+    Optional<Member> findByIdAndProjectIdWithProjectAndRecruit(
+            @Param("memberId") Long memberId,
+            @Param("projectId") Long projectId
+    );
 }

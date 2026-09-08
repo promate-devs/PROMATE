@@ -2,11 +2,11 @@ package org.example.promate.domain.project.controller;
 
 import lombok.RequiredArgsConstructor;
 
+import org.example.promate.domain.project.code.MemberSuccessCode;
 import org.example.promate.domain.project.code.ProjectSuccessCode;
-import org.example.promate.domain.project.dto.MyActivityResponseDTO;
-import org.example.promate.domain.project.dto.MyApplicationResponseDTO;
-import org.example.promate.domain.project.dto.MyProjectResponseDTO;
-import org.example.promate.domain.project.dto.ProjectMemberResponseDTO;
+import org.example.promate.domain.project.dto.*;
+import org.example.promate.domain.project.enums.ProjectStatus;
+import org.example.promate.domain.project.service.MemberService;
 import org.example.promate.domain.project.service.ProjectService;
 import org.example.promate.global.ApiPayload.ApiResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +21,7 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final MemberService memberService;
 
     @GetMapping("/me")
     public ApiResponse<List<MyProjectResponseDTO>> getMyProjects(
@@ -63,6 +64,23 @@ public class ProjectController {
         );
     }
 
+    // 프로젝트 정보 변경
+    @PutMapping("/{projectId}")
+    public ApiResponse<UpdatedProjectResponseDto> updateProject(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long projectId,
+            @RequestBody UpdateProjectRequestDto dto
+    ){
+        return ApiResponse.onSuccess(ProjectSuccessCode.UPDATE_SUCCESS, projectService.updateProject(userId, projectId, dto));
+    }
 
-
+    // 프로젝트 상태 변경
+    @PatchMapping("/{projectId}/status")
+    public ApiResponse<UpdatedProjectResponseDto> changeProjectStatus(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long projectId,
+            @RequestParam ProjectStatus status
+    ){
+        return ApiResponse.onSuccess(ProjectSuccessCode.UPDATE_SUCCESS, projectService.changeProjectStatus(userId, projectId, status));
+    }
 }

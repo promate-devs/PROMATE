@@ -18,7 +18,6 @@ public record RecruitCreateRequest(
         LocalDate startDate,
         @NotNull(message = "프로젝트 마감일을 선택하세요")
         LocalDate endDate,
-        String recruitImageUrl
-
+        String thumbnailUrl
 ){
 }

@@ -53,4 +53,8 @@ public class Member extends BaseEntity {
     public void delete(){
         super.performDelete();
     }
+
+    public void changeRole(String role){
+        this.role = role;
+    }
 }

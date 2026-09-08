@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.example.promate.domain.apply.entity.Apply;
+import org.example.promate.domain.project.dto.UpdateProjectRequestDto;
 import org.example.promate.domain.project.entity.Project;
+import org.example.promate.domain.recruit.code.RecruitErrorCode;
 import org.example.promate.domain.recruit.enums.Category;
 import org.example.promate.domain.recruit.enums.RecruitStatus;
 import org.example.promate.domain.user.entity.User;
+import org.example.promate.global.ApiPayload.exception.GeneralException;
 import org.example.promate.global.entity.BaseEntity;
 
 import java.util.ArrayList;
@@ -46,9 +49,8 @@ public class Recruit extends BaseEntity {
     @Column(name="total_slots", nullable = false)
     private int totalSlots;
 
-    @Column(name = "recruit_image_url", nullable = true, columnDefinition = "LONGTEXT")
-    private String recruitImageUrl;
-
+    @Column(name = "thumbnail_url", nullable = true, columnDefinition = "TEXT")
+    private String thumbnailUrl;
 
     //mapping
     @OneToMany(mappedBy = "recruit", fetch = FetchType.LAZY)
@@ -71,14 +73,25 @@ public class Recruit extends BaseEntity {
     public void update(
             String title,
             String description,
-            String recruitImageUrl
+            String thumbnailUrl,
+            Category category,
+            int totalSlots
     ) {
         this.title = title;
         this.description = description;
 
-        if (recruitImageUrl != null && !recruitImageUrl.isBlank()) {
-            this.recruitImageUrl = recruitImageUrl;
+        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
+            this.thumbnailUrl = thumbnailUrl;
         }
+        if (category != null) {
+            this.category = category;
+        }
+
+        if(totalSlots < 1 || totalSlots < this.getJoinedCount()){
+            throw new GeneralException(RecruitErrorCode.INVALID_RECRUIT_PARTICIPANTS);
+        }
+
+        this.totalSlots = totalSlots;
     }
 
     public void delete(){
@@ -99,5 +112,24 @@ public class Recruit extends BaseEntity {
 
     public void disconnectProject(){
         this.project = null;
+    }
+
+    public void update(UpdateProjectRequestDto request){
+        this.title = request.getTitle();
+        this.description = request.getDescription();
+
+        if (request.getThumbnailUrl() != null && !request.getThumbnailUrl().isBlank()) {
+            this.thumbnailUrl = request.getThumbnailUrl();
+        }
+
+        if (request.getCategory() != null) {
+            this.category = request.getCategory();
+        }
+
+        if(request.getTotalSlots() < 1 || request.getTotalSlots() < this.getJoinedCount()){
+            throw new GeneralException(RecruitErrorCode.INVALID_RECRUIT_PARTICIPANTS);
+        }
+
+        this.totalSlots = request.getTotalSlots();
     }
 }
