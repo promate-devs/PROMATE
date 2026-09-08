@@ -28,6 +28,7 @@ const TASK_STATUS_LABELS = {
   IN_PROGRESS: '진행 중',
   DONE: '진행 완료'
 };
+const NO_ASSIGNED_TASKS_MESSAGE = '해당 프로젝트에 할당된 태스크를 찾을 수 없어 진행률을 계산할 수 없습니다';
 
 const getTaskStatusLabel = (status) => TASK_STATUS_LABELS[status] || status;
 
@@ -87,6 +88,12 @@ function TeamPage() {
       setProjectProgress(data.projectProgress || 0);
       if (data.projectTitle) setProjectTitle(data.projectTitle);
     } catch (err) {
+      if (err.message?.includes(NO_ASSIGNED_TASKS_MESSAGE)) {
+        setTasks([]);
+        setProjectProgress(0);
+        return;
+      }
+
       setTasksError(err.message);
     } finally {
       setIsTasksLoading(false);

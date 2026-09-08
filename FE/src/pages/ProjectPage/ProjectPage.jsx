@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ProjectBox from '../../components/ProjectBox/ProjectBox';
 import ApplicantBox from '../../components/ApplicantBox/ApplicantBox';
 import ApplyModal from '../../components/ApplyModal/ApplyModal';
-import { getAppliedProjects, getBookmarkedProjects, getCompletedProjects } from '../../api/Project/projectApi';
-import { getDashboardProjects } from '../../api/Dashboard/dashboardApi';
+import { getAppliedProjects, getBookmarkedProjects, getActiveProjects, getCompletedProjects } from '../../api/Project/projectApi';
 import Pagination from '../../components/Pagination/Pagination';
 import apiClient from '../../api/apiClient';
 import './ProjectPage.css';
@@ -128,26 +127,14 @@ function ProjectPage() {
 
     const fetchActiveProjects = async () => {
       try {
-        const [projectsResult, taskCountsResult] = await Promise.allSettled([
-          getDashboardProjects(),
-          apiClient.get('/user/me/projects/task-counts'),
-        ]);
-        if (projectsResult.status === 'rejected') throw projectsResult.reason;
-
-        const projectsResponse = projectsResult.value;
-        if (projectsResponse.data && projectsResponse.data.isSuccess) {
-          const taskCounts = taskCountsResult.status === 'fulfilled'
-            ? (taskCountsResult.value.data?.data ?? [])
-            : [];
-          const taskCountsByProject = new Map(
-            taskCounts.map((item) => [String(item.projectId), item])
-          );
+        const response = await getActiveProjects();
+        if (response.data && response.data.isSuccess) {
           const getDeadline = (endDate) => {
             const deadline = Date.parse(endDate);
             return Number.isNaN(deadline) ? Number.POSITIVE_INFINITY : deadline;
           };
 
-          const fetchedData = [...(projectsResponse.data.data ?? [])]
+          const fetchedData = [...response.data.data]
             .sort((a, b) => {
               const aDeadline = getDeadline(a.endDate);
               const bDeadline = getDeadline(b.endDate);
@@ -155,20 +142,14 @@ function ProjectPage() {
               if (aDeadline === bDeadline) return 0;
               return aDeadline < bDeadline ? -1 : 1;
             })
-            .map((item) => {
-              const taskCount = taskCountsByProject.get(String(item.projectId));
-              const completedTaskCount = taskCount?.completedTaskCount ?? 0;
-              const incompleteTaskCount = taskCount?.incompleteTaskCount ?? 0;
-
-              return {
-                id: `active-${item.projectId}`,
-                projectId: item.projectId,
-                title: item.title,
-                dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
-                currentStep: completedTaskCount,
-                totalStep: completedTaskCount + incompleteTaskCount,
-              };
-            });
+            .map((item) => ({
+              id: `active-${item.projectId}`,
+              projectId: item.projectId,
+              title: item.title,
+              dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
+              currentStep: item.completedTaskCount,
+              totalStep: item.completedTaskCount + item.incompleteTaskCount,
+            }));
           setActiveProjects(fetchedData);
         }
       } catch (error) {
