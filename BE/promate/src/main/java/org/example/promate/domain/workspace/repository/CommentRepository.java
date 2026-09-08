@@ -21,4 +21,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     boolean existsByIdAndPostId(Long commentId, Long postId);
 
     Optional<Comment> findByIdAndMember(Long commentId, Member member);
+
+    @Query("select c.post.id, count(c) " +
+            "from Comment c " +
+            "where c.post.id in :postIds " +
+            "group by c.post.id")
+    List<Object[]> countCommentsByPostIds(@Param("postIds") List<Long> postIds);
+
+    void deleteByPostId(Long postId);
 }

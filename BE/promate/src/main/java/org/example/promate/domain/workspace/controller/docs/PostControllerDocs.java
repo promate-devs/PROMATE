@@ -16,6 +16,8 @@ import org.example.promate.global.ApiPayload.ApiResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @Tag(name = "WORKSPACE_POST", description = "WORKSPACE 도메인 내 팀 게시판 관리 API")
 public interface PostControllerDocs {
@@ -111,11 +113,11 @@ public interface PostControllerDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "게시글 조회 성공 (POST_S005)",
-                    content = @Content(schema = @Schema(implementation = PostResDto.PostListDto.class))
+                    content = @Content(schema = @Schema(implementation = PostResDto.PostSummaryDto.class))
             )
     })
     @GetMapping("/projects/{projectId}")
-    ApiResponse<PostResDto.PostListDto> getAllPostByType(
+    ApiResponse<List<PostResDto.PostSummaryDto>> getAllPostByType(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long projectId,
             @RequestParam(name = "type", required = false) PostType postType

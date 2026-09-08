@@ -5,6 +5,7 @@ import org.example.promate.domain.project.entity.Project;
 import org.example.promate.domain.user.entity.User;
 import org.example.promate.domain.workspace.dto.req.PostReqDto;
 import org.example.promate.domain.workspace.dto.res.PostResDto;
+import org.example.promate.domain.workspace.entity.Comment;
 import org.example.promate.domain.workspace.entity.Post;
 import org.example.promate.domain.workspace.enums.PostType;
 
@@ -41,10 +42,11 @@ public class PostConverter {
     public static PostResDto.DeletedPostDto toDeletedPostDto(Post post){
         return PostResDto.DeletedPostDto.builder()
                 .postId(post.getId())
+                .deletedAt(LocalDateTime.now())
                 .build();
     }
 
-    public static PostResDto.PostDto toPostDto(Post post){
+    public static PostResDto.PostDto toPostDto(Post post, List<Comment> comments){
         return PostResDto.PostDto.builder()
                 .postId(post.getId())
                 .postType(post.getPostType())
@@ -57,14 +59,21 @@ public class PostConverter {
                 .attached(post.getAttachedList().stream()
                         .map(PostAttachedConverter::toAttachedDto)
                         .toList())
+                .commentList(comments.stream()
+                        .map(CommentConverter::toCommentDto)
+                        .toList())
                 .build();
     }
 
-    public static PostResDto.PostListDto toPostListDto(List<Post> posts){
-        return PostResDto.PostListDto.builder()
-                .postList(posts.stream()
-                        .map(PostConverter::toPostDto)
-                        .toList())
+    public static PostResDto.PostSummaryDto toPostSummaryDto(Post post, Long commentCount) {
+        return PostResDto.PostSummaryDto.builder()
+                .postId(post.getId())
+                .postType(post.getPostType())
+                .title(post.getTitle())
+                .writerName(post.getMember().getUser().getName())
+                .createdAt(post.getCreatedAt())
+                .isPinned(post.isPinned())
+                .commentCount(commentCount)
                 .build();
     }
 }
