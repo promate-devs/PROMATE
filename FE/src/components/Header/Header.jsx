@@ -13,8 +13,8 @@ import './Header.css';
 function Header({ onMenuClick }) {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [userData, setUserData] = useState({ userName: "...", profileImageUrl: null });
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -26,7 +26,6 @@ function Header({ onMenuClick }) {
       const token = localStorage.getItem("accessToken");
       
       if (!token) {
-        setIsLoggedIn(false);
         return;
       }
 
@@ -40,13 +39,9 @@ function Header({ onMenuClick }) {
             userName: userData?.name || userData?.nickname || userData?.userName || "사용자",
             profileImageUrl: userData?.profileImageUrl || null
           });
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
         }
       } catch (error) {
         console.error("유저 정보 로드 실패", error);
-        setIsLoggedIn(false);
       }
     };
     fetchUserData();
@@ -55,7 +50,7 @@ function Header({ onMenuClick }) {
     return () => {
       window.removeEventListener('userProfileUpdated', fetchUserData);
     };
-  }, []);
+  }, [isLoggedIn]);
 
   return (
     <header className="header">
