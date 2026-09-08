@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import ProjectBox from '../../components/ProjectBox/ProjectBox';
 import ApplicantBox from '../../components/ApplicantBox/ApplicantBox';
 import ApplyModal from '../../components/ApplyModal/ApplyModal';
-import { getAppliedProjects, getBookmarkedProjects, getActiveProjects, getCompletedProjects } from '../../api/Project/projectApi';
+import { getAppliedProjects, getBookmarkedProjects, getCompletedProjects } from '../../api/Project/projectApi';
+import { getDashboardProjects } from '../../api/Dashboard/dashboardApi';
 import Pagination from '../../components/Pagination/Pagination';
 import apiClient from '../../api/apiClient';
 import './ProjectPage.css';
@@ -14,8 +15,6 @@ const tabs = [
   { key: 'active', label: '진행중인 프로젝트' },
   { key: 'completed', label: '완료된 프로젝트' }
 ];
-
-const NO_ASSIGNED_TASKS_MESSAGE = '해당 프로젝트에 할당된 태스크를 찾을 수 없어 진행률을 계산할 수 없습니다';
 
 function ProjectPage() {
   const [activeTab, setActiveTab] = useState('bookmarked');
@@ -129,14 +128,26 @@ function ProjectPage() {
 
     const fetchActiveProjects = async () => {
       try {
-        const response = await getActiveProjects();
-        if (response.data && response.data.isSuccess) {
+        const [projectsResult, taskCountsResult] = await Promise.allSettled([
+          getDashboardProjects(),
+          apiClient.get('/user/me/projects/task-counts'),
+        ]);
+        if (projectsResult.status === 'rejected') throw projectsResult.reason;
+
+        const projectsResponse = projectsResult.value;
+        if (projectsResponse.data && projectsResponse.data.isSuccess) {
+          const taskCounts = taskCountsResult.status === 'fulfilled'
+            ? (taskCountsResult.value.data?.data ?? [])
+            : [];
+          const taskCountsByProject = new Map(
+            taskCounts.map((item) => [String(item.projectId), item])
+          );
           const getDeadline = (endDate) => {
             const deadline = Date.parse(endDate);
             return Number.isNaN(deadline) ? Number.POSITIVE_INFINITY : deadline;
           };
 
-          const fetchedData = [...response.data.data]
+          const fetchedData = [...(projectsResponse.data.data ?? [])]
             .sort((a, b) => {
               const aDeadline = getDeadline(a.endDate);
               const bDeadline = getDeadline(b.endDate);
@@ -144,22 +155,23 @@ function ProjectPage() {
               if (aDeadline === bDeadline) return 0;
               return aDeadline < bDeadline ? -1 : 1;
             })
-            .map((item) => ({
-              id: `active-${item.projectId}`,
-              projectId: item.projectId,
-              title: item.title,
-              dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
-              currentStep: item.completedTaskCount,
-              totalStep: item.completedTaskCount + item.incompleteTaskCount,
-            }));
+            .map((item) => {
+              const taskCount = taskCountsByProject.get(String(item.projectId));
+              const completedTaskCount = taskCount?.completedTaskCount ?? 0;
+              const incompleteTaskCount = taskCount?.incompleteTaskCount ?? 0;
+
+              return {
+                id: `active-${item.projectId}`,
+                projectId: item.projectId,
+                title: item.title,
+                dueDate: item.endDate ? item.endDate.replace(/-/g, '.') : '',
+                currentStep: completedTaskCount,
+                totalStep: completedTaskCount + incompleteTaskCount,
+              };
+            });
           setActiveProjects(fetchedData);
         }
       } catch (error) {
-        if (error.message?.includes(NO_ASSIGNED_TASKS_MESSAGE)) {
-          setActiveProjects([]);
-          return;
-        }
-
         console.error('진행중인 프로젝트 조회 실패:', error);
       }
     };
