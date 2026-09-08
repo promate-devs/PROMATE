@@ -67,10 +67,10 @@ export const deleteProjectTask = async (projectId, taskId) => {
   return response.data.data;
 };
 
-export const createPostComment = async (projectId, postId, content) => {
+export const createPostComment = async (projectId, postId, comment) => {
   const response = await apiClient.post(
     `/projects/${projectId}/posts/${postId}/comments`,
-    { content }
+    { comment }
   );
   return response.data.data;
 };

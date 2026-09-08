@@ -134,15 +134,21 @@ export const handlers = [
 
   http.post('*/projects/:projectId/posts/:postId/comments', async ({ params, request }) => {
     const body = await request.json();
+    const createdAt = new Date().toISOString();
     const newComment = {
       commentId: Math.max(0, ...mockPostComments.map((item) => item.commentId)) + 1,
       postId: Number(params.postId),
       writerName: '김프로',
-      content: body.content,
-      createdAt: new Date().toISOString(),
+      content: body.comment,
+      createdAt,
     };
     mockPostComments.push(newComment);
-    return ok(newComment, '댓글을 등록했습니다.');
+    return HttpResponse.json({
+      isSuccess: true,
+      code: 'COMMENT_S001',
+      message: '댓글 추가에 성공했습니다.',
+      data: { commentId: newComment.commentId, createdAt },
+    });
   }),
 
   http.post('*/projects/:projectId/posts', async ({ request }) => {
