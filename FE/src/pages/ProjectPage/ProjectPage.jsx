@@ -15,6 +15,8 @@ const tabs = [
   { key: 'completed', label: '완료된 프로젝트' }
 ];
 
+const NO_ASSIGNED_TASKS_MESSAGE = '해당 프로젝트에 할당된 태스크를 찾을 수 없어 진행률을 계산할 수 없습니다';
+
 function ProjectPage() {
   const [activeTab, setActiveTab] = useState('bookmarked');
   const [projects, setProjects] = useState([]);
@@ -153,6 +155,11 @@ function ProjectPage() {
           setActiveProjects(fetchedData);
         }
       } catch (error) {
+        if (error.message?.includes(NO_ASSIGNED_TASKS_MESSAGE)) {
+          setActiveProjects([]);
+          return;
+        }
+
         console.error('진행중인 프로젝트 조회 실패:', error);
       }
     };
