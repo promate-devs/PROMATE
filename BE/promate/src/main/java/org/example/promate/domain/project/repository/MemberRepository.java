@@ -52,4 +52,15 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
             @Param("memberId") Long memberId,
             @Param("projectId") Long projectId
     );
+
+    @Query("""
+    SELECT m
+    FROM Member m
+    JOIN FETCH m.user u
+    WHERE m.project.id = :projectId
+      AND m.isDeleted = false
+    """)
+    List<Member> findAllByProjectIdAndIsDeletedFalseWithUser(
+            @Param("projectId") Long projectId
+    );
 }
