@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ApplyModal from "../../components/ApplyModal/ApplyModal.jsx";
 import Tag from "../../components/Tag/Tag.jsx";
@@ -31,22 +31,18 @@ function FindTeamPage() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedKeyword(searchKeyword);
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(handler);
   }, [searchKeyword]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCategory, debouncedKeyword]);
-
-  useEffect(() => {
     const fetchRecruitments = async () => {
       try {
         const params = {
-          page: 0,
-          size: 1000,
+          page: currentPage - 1,
+          size: ITEMS_PER_PAGE,
           sort: "createdAt,desc",
-          _t: new Date().getTime(),
         };
 
         if (selectedCategory) {
@@ -60,7 +56,7 @@ function FindTeamPage() {
         const response = await apiClient.get("/recruitments", { params });
 
         if (response.data && response.data.isSuccess) {
-          const { content } = response.data.data;
+          const { content, totalPages: serverTotalPages } = response.data.data;
           const getCreatedTime = (createdAt) => {
             const createdTime = Date.parse(createdAt);
             return Number.isNaN(createdTime) ? Number.NEGATIVE_INFINITY : createdTime;
@@ -95,7 +91,7 @@ function FindTeamPage() {
             });
 
           setTeamPosts(mappedData);
-          setTotalPages(Math.ceil(mappedData.length / ITEMS_PER_PAGE) || 1);
+          setTotalPages(serverTotalPages || 1);
         }
       } catch (error) {
         console.error("모집글 조회 실패:", error);
@@ -103,7 +99,7 @@ function FindTeamPage() {
     };
 
     fetchRecruitments();
-  }, [selectedCategory, debouncedKeyword]);
+  }, [currentPage, selectedCategory, debouncedKeyword]);
 
   const selectedTeam = teamPosts.find((team) => team.id === selectedTeamId);
   const isApplyModalOpen = selectedTeamId !== null;
@@ -154,10 +150,7 @@ function FindTeamPage() {
     );
   };
 
-  const currentTeamPosts = teamPosts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const currentTeamPosts = teamPosts;
 
   return (
     <main className="find-team-page">
@@ -170,7 +163,10 @@ function FindTeamPage() {
               key={category.id}
               isActive={selectedCategory === category.id}
               className="find-team-category"
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => {
+                setSelectedCategory(category.id);
+                setCurrentPage(1);
+              }}
             >
               {category.label}
             </Tag>

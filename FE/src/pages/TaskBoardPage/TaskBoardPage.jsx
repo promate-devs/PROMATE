@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { getProjectTasks, updateTaskStatus, deleteProjectTask, getProjectMembers, createProjectTask, getTaskDetail } from '../../api/TeamPage.js';
+import { getProjectTasks, updateProjectTask, updateTaskStatus, deleteProjectTask, getProjectMembers, createProjectTask, getTaskDetail } from '../../api/TeamPage.js';
 import NewTaskModal from '../../components/NewTaskModal/NewTaskModal.jsx';
 import TaskDetailModal from '../TeamPage/components/TaskDetailModal.jsx';
 import writeIcon from '../../assets/icons/writeIcon.svg';
@@ -39,9 +39,11 @@ function TaskBoardPage() {
     const fetchData = async () => {
       if (!projectId) return;
       try {
-        const taskData = await getProjectTasks(projectId);
+        const [taskData, memberData] = await Promise.all([
+          getProjectTasks(projectId),
+          getProjectMembers(projectId),
+        ]);
         setTasks(taskData.taskList || []);
-        const memberData = await getProjectMembers(projectId);
         setMembers(memberData || []);
       } catch (error) {
         console.error("데이터를 불러오는데 실패했습니다.", error);

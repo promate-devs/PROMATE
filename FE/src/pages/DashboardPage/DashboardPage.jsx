@@ -170,22 +170,15 @@ function DashboardPage() {
 
   const isAllEmpty = summaryCards.every((card) => card.items.length === 0);
 
-  if (isLoading) {
-    return (
-      <div className="dashboard-container">
-        <h1 className="dashboard-title">대시보드</h1>
-        <p>대시보드 데이터를 불러오는 중입니다.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container">
       <h1 className="dashboard-title">대시보드</h1>
 
       <div className="dashboard-content">
         <div className="dashboard-summary-row">
-          {summaryCards.map(({ id, title, items, showDot, isError }) => (
+          {isLoading ? (
+            <p>대시보드 데이터를 불러오는 중입니다.</p>
+          ) : summaryCards.map(({ id, title, items, showDot, isError }) => (
             <SummaryCard
               key={id}
               title={title}
@@ -209,7 +202,9 @@ function DashboardPage() {
             </div>
 
             <div className="status-list">
-            {!isLoggedIn ? (
+            {isLoading ? (
+              <div className="empty-state">프로젝트 현황을 불러오는 중입니다.</div>
+            ) : !isLoggedIn ? (
               <div className="empty-state" style={{ color: '#888', fontSize: '14px', textAlign: 'center', lineHeight: 1.5 }}>
                 로그인 후<br />대시보드를 이용할 수 있습니다.
               </div>

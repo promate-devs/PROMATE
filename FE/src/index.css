@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'YSpotlightOTF';
-  src: url('./assets/fonts/YSpotlightOTF.ttf') format('truetype');
+  src: url('./assets/fonts/YSpotlightOTF.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
