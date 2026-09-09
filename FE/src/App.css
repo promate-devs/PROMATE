@@ -4,18 +4,6 @@
   min-width: 0;
 }
 
-.route-loading {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  color: #666;
-  font-family: sans-serif;
-}
-
-.route-loading--content {
-  min-height: calc(100vh - 56px);
-}
-
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;

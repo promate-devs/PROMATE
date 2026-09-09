@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectBox from '../../components/ProjectBox/ProjectBox';
 import ApplicantBox from '../../components/ApplicantBox/ApplicantBox';
@@ -27,7 +27,6 @@ function ProjectPage() {
   const [applyJob, setApplyJob] = useState('');
   const [applyMotivation, setApplyMotivation] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const loadedTabsRef = useRef(new Set());
   const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
@@ -37,8 +36,6 @@ function ProjectPage() {
       navigate(-1);
       return;
     }
-
-    if (loadedTabsRef.current.has(activeTab)) return;
 
     const fetchAppliedProjects = async () => {
       try {
@@ -78,7 +75,7 @@ function ProjectPage() {
       try {
         const response = await getBookmarkedProjects(0, ITEMS_PER_PAGE);
         if (response.data && response.data.isSuccess) {
-          const fetchedData = response.data.data.content.map((item) => {
+          const fetchedData = await Promise.all(response.data.data.content.map(async (item) => {
             let mappedStatus = null;
             switch (item.myApplyStatus) {
               case 'ACCEPTED': mappedStatus = 'accepted'; break;
@@ -90,6 +87,16 @@ function ProjectPage() {
             let projectStatus = 'active';
             if (['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(item.status)) {
               projectStatus = 'completed';
+            }
+
+            let isEvaluated = false;
+            if (projectStatus === 'completed' && item.projectId && item.projectId !== 'null') {
+              try {
+                const statusRes = await apiClient.get(`/projects/${item.projectId}/reviews/status`);
+                isEvaluated = statusRes.data?.data?.reviewed || false;
+              } catch (error) {
+                console.error(`프로젝트 ${item.projectId} 평가 상태 조회 실패:`, error);
+              }
             }
 
             return {
@@ -106,9 +113,9 @@ function ProjectPage() {
               applied: item.myApplyStatus !== null,
               applyStatus: mappedStatus,
               status: projectStatus,
-              isEvaluated: projectStatus === 'completed' ? null : false
+              isEvaluated
             };
-          });
+          }));
           
           const uniqueProjects = Array.from(new Map(fetchedData.map(item => [item.id, item])).values());
           setProjects(uniqueProjects);
@@ -154,7 +161,18 @@ function ProjectPage() {
       try {
         const response = await getCompletedProjects();
         if (response.data && response.data.isSuccess) {
-          const fetchedData = response.data.data.map((item) => ({
+          const fetchedData = await Promise.all(response.data.data.map(async (item) => {
+            let isEvaluated = false;
+            if (item.projectId && item.projectId !== 'null') {
+              try {
+                const statusRes = await apiClient.get(`/projects/${item.projectId}/reviews/status`);
+                isEvaluated = statusRes.data?.data?.reviewed || false;
+              } catch (error) {
+                console.error(`프로젝트 ${item.projectId} 평가 상태 조회 실패:`, error);
+              }
+            }
+
+            return {
               id: `completed-${item.projectId}`,
               projectId: item.projectId,
               title: item.title,
@@ -162,8 +180,9 @@ function ProjectPage() {
               status: 'completed',
               applyStatus: 'accepted',
               bookmarked: item.isBookmarked ?? item.bookmarked ?? false,
-              isEvaluated: item.reviewed ?? item.isReviewed ?? null,
-            }));
+              isEvaluated,
+            };
+          }));
           setCompletedProjects(fetchedData);
         }
       } catch (error) {
@@ -171,17 +190,11 @@ function ProjectPage() {
       }
     };
 
-    const fetchers = {
-      bookmarked: fetchBookmarkedProjects,
-      applied: fetchAppliedProjects,
-      active: fetchActiveProjects,
-      completed: fetchCompletedProjects,
-    };
-
-    fetchers[activeTab]().finally(() => {
-      loadedTabsRef.current.add(activeTab);
-    });
-  }, [activeTab, navigate]);
+    fetchAppliedProjects();
+    fetchBookmarkedProjects();
+    fetchActiveProjects();
+    fetchCompletedProjects();
+  }, [navigate]);
 
   const handleToggleBookmark = async (id) => {
     try {
@@ -216,47 +229,10 @@ function ProjectPage() {
   }, [activeTab, projects, appliedProjects, activeProjects, completedProjects]);
 
   const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
-  const currentProjects = useMemo(() => filteredProjects.slice(
+  const currentProjects = filteredProjects.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
-  ), [currentPage, filteredProjects]);
-
-  const pendingReviewProjectIds = useMemo(() => currentProjects
-    .filter((project) => project.status === 'completed' && project.isEvaluated === null && project.projectId)
-    .map((project) => project.projectId), [currentProjects]);
-
-  useEffect(() => {
-    if (pendingReviewProjectIds.length === 0) return;
-
-    let isCancelled = false;
-    const fetchReviewStatuses = async () => {
-      const entries = await Promise.all(pendingReviewProjectIds.map(async (projectId) => {
-        try {
-          const response = await apiClient.get(`/projects/${projectId}/reviews/status`);
-          return [projectId, response.data?.data?.reviewed || false];
-        } catch (error) {
-          console.error(`프로젝트 ${projectId} 평가 상태 조회 실패:`, error);
-          return [projectId, false];
-        }
-      }));
-
-      if (isCancelled) return;
-      const statuses = new Map(entries);
-      const applyStatuses = (items) => items.map((item) => (
-        statuses.has(item.projectId)
-          ? { ...item, isEvaluated: statuses.get(item.projectId) }
-          : item
-      ));
-
-      if (activeTab === 'completed') setCompletedProjects(applyStatuses);
-      if (activeTab === 'bookmarked') setProjects(applyStatuses);
-    };
-
-    fetchReviewStatuses();
-    return () => {
-      isCancelled = true;
-    };
-  }, [activeTab, pendingReviewProjectIds]);
+  );
 
   const handleCloseApplyModal = () => {
     setIsApplyModalOpen(false);
@@ -310,11 +286,7 @@ function ProjectPage() {
               let isButtonDisabled = false;
 
               if (activeTab === 'completed' || (activeTab === 'bookmarked' && project.status === 'completed')) {
-                if (project.isEvaluated === null) {
-                  buttonText = '확인 중...';
-                  buttonColor = '#D9D9D9';
-                  isButtonDisabled = true;
-                } else if (project.isEvaluated) {
+                if (project.isEvaluated) {
                   buttonText = '완료';
                   buttonColor = '#D9D9D9';
                   isButtonDisabled = true;
