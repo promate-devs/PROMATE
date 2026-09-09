@@ -16,12 +16,12 @@ spring:
   jpa:
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
 springdoc:
   querydsl:
@@ -46,6 +46,5 @@ jwt:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
