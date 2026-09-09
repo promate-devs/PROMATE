@@ -62,6 +62,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     testImplementation 'com.h2database:h2'
+
+    // [Database] JPA & MySQL
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.25.0'
 }
 
 def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
