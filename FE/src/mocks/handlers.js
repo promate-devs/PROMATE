@@ -99,7 +99,7 @@ export const handlers = [
       ...post,
       commentCount: mockPostComments.filter((comment) => comment.postId === post.postId).length,
     }));
-    return ok({ postList });
+    return ok(postList);
   }),
 
   http.get('*/projects/:projectId/posts/:postId', async ({ params }) => {

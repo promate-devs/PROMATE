@@ -62,8 +62,7 @@ function BoardPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getProjectPosts(projectId);
-      const nextPosts = data.postList || [];
+      const nextPosts = await getProjectPosts(projectId);
       const nextTotalPages = Math.max(1, Math.ceil(nextPosts.length / POSTS_PER_PAGE));
       setPosts(nextPosts);
       setCurrentPage((page) => Math.min(page, nextTotalPages));

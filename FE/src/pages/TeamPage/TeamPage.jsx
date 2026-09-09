@@ -112,8 +112,8 @@ function TeamPage() {
     try {
       setIsBoardLoading(true);
       setBoardError(null);
-      const data = await getProjectPosts(idToFetch);
-      setBoardPosts(data.postList || []);
+      const postList = await getProjectPosts(idToFetch);
+      setBoardPosts(postList);
     } catch (err) {
       setBoardError(err.message);
     } finally {

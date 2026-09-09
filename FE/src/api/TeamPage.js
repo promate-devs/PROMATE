@@ -12,7 +12,8 @@ export const getProjectTasks = async (projectId) => {
 
 export const getProjectPosts = async (projectId) => {
   const response = await apiClient.get(`/projects/${projectId}/posts`);
-  return response.data.data;
+  const data = response.data.data;
+  return Array.isArray(data) ? data : data?.postList ?? [];
 };
 
 export const getPostDetail = async (projectId, postId) => {
