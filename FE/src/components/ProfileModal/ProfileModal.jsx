@@ -151,7 +151,8 @@ function ProfileModal({ isOpen, onClose, user, position }) {
               const period = project.period || (project.startDate && project.endDate ? `${project.startDate} ~ ${project.endDate}` : "");
               
               const rawStatus = project.status || project.projectStatus;
-              const status = (rawStatus === "COMPLETED" || rawStatus === "DONE" || rawStatus === "완료") ? "완료" : "진행중";
+              const isCompleted = rawStatus === "COMPLETED" || rawStatus === "DONE" || rawStatus === "완료";
+              const status = isCompleted ? "완료" : "진행중";
               const score = project.score ?? project.averageReviewScore;
 
               return (
@@ -176,7 +177,7 @@ function ProfileModal({ isOpen, onClose, user, position }) {
                     </span>
 
                     <div className="project-score">
-                      {score != null ? (
+                      {isCompleted && score != null ? (
                         <>
                           <span className="score-number">{Number(score).toFixed(1)}</span>
                           <span className="score-text">점</span>
