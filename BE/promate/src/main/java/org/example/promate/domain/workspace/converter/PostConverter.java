@@ -20,7 +20,7 @@ public class PostConverter {
                 .postType(dto.getPostType())
                 .member(member)
                 .project(project)
-                .isPinned(dto.getIsPinned())
+                .isPinned(Boolean.TRUE.equals(dto.getIsPinned()))
                 .build();
     }
 

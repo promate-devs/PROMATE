@@ -172,7 +172,7 @@ public class ProjectService {
             throw new MemberException(MemberErrorCode.MEMBER_FORBIDDEN_NOT_PROJECT_MEMBER);
         }
 
-        return memberRepository.findAllByProjectIdAndIsDeletedFalse(projectId)
+        return memberRepository.findAllByProjectIdAndIsDeletedFalseWithUser(projectId)
                 .stream()
                 .map(member -> ProjectMemberResponseDTO.builder()
                         .userId(member.getUser().getId())
