@@ -72,7 +72,11 @@ function ApplyModal({
       }
     } catch (error) {
       console.error("지원서 제출 실패:", error);
-      alert(error.response?.data?.message || "지원서 제출 중 오류가 발생했습니다.");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "지원서 제출 중 오류가 발생했습니다.";
+      alert(errorMessage);
     } finally {
       submitLockRef.current = false;
       setIsSubmitting(false);
